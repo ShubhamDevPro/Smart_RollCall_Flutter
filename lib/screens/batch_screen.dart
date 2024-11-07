@@ -13,23 +13,24 @@ class BatchScreen extends StatelessWidget {
       stream: _firestoreService.getBatches(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
         }
 
         return ListView(
           children: snapshot.data!.docs.map((doc) {
-            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            final data = doc.data() as Map<String, dynamic>;
             return ListTile(
-              title: Text(data['name']),
-              subtitle: Text(data['year']),
+              title: Text(data['title']),
+              subtitle: Text('${data['batchName']} ${data['batchYear']}'),
+              leading: Icon(IconData(data['icon'], fontFamily: 'MaterialIcons')),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AttendanceScreen(),
+                  builder: (context) => AttendanceScreen(batchId: doc.id),
                 ),
               ),
             );

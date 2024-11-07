@@ -19,4 +19,12 @@ class Student {
       isPresent: data['isPresent'] ?? false,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'enrollNumber': enrollNumber,
+      'isPresent': isPresent,
+    };
+  }
 }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:smart_roll_call_flutter/models/batches.dart';
 
 class CourseModal extends StatefulWidget {
-  final Function(String title, String batchName, String batchYear, IconData iconData) onSave;
+  final Function(
+          String title, String batchName, String batchYear, IconData iconData)
+      onSave;
   final String? initialTitle;
   final String? initialBatchName;
   final String? initialBatchYear;
@@ -22,136 +25,129 @@ class CourseModal extends StatefulWidget {
 
 class _CourseModalState extends State<CourseModal> {
   late final titleController = TextEditingController(text: widget.initialTitle);
-  late final batchNameController = TextEditingController(text: widget.initialBatchName);
-  late final batchYearController = TextEditingController(text: widget.initialBatchYear);
+  late final batchNameController =
+      TextEditingController(text: widget.initialBatchName);
+  late final batchYearController =
+      TextEditingController(text: widget.initialBatchYear);
   late IconData selectedIcon = widget.initialIcon ?? Icons.book;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Text(
-                widget.initialTitle == null ? 'Add New Course' : 'Edit Course',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Icon selector
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 25,
-                child: Icon(selectedIcon, size: 30),
-              ),
-              const SizedBox(width: 16),
-              TextButton.icon(
-                onPressed: () => _showIconPicker(context),
-                icon: const Icon(Icons.edit),
-                label: const Text('Change Icon'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: titleController,
-            decoration: InputDecoration(
-              labelText: 'Course Title',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              prefixIcon: const Icon(Icons.book),
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Text(
+                  widget.initialTitle == null ? 'Add New Course' : 'Edit Course',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
             ),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: batchNameController,
-            decoration: InputDecoration(
-              labelText: 'Batch Name',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              prefixIcon: const Icon(Icons.group),
+            const SizedBox(height: 20),
+            // Icon selector
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 25,
+                  child: Icon(selectedIcon, size: 30),
+                ),
+                const SizedBox(width: 16),
+                TextButton.icon(
+                  onPressed: () => _showIconPicker(context),
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Change Icon'),
+                ),
+              ],
             ),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: batchYearController,
-            decoration: InputDecoration(
-              labelText: 'Batch Year',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 16),
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: 'Course Title',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.book),
               ),
-              prefixIcon: const Icon(Icons.calendar_today),
+              textCapitalization: TextCapitalization.words,
             ),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _validateAndSave,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 16),
+            BatchFormFields(
+              batchNameController: batchNameController,
+              batchYearController: batchYearController,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _validateAndSave,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                widget.initialTitle == null ? 'Create Course' : 'Update Course',
+                style: const TextStyle(fontSize: 16),
               ),
             ),
-            child: Text(
-              widget.initialTitle == null ? 'Create Course' : 'Update Course',
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  void _validateAndSave() {
-    if (titleController.text.isEmpty ||
-        batchNameController.text.isEmpty ||
-        batchYearController.text.isEmpty) {
+  void _validateAndSave() async {
+    try {
+      // Validate all fields
+      final String title = titleController.text.trim();
+      final String batchName = batchNameController.text.trim();
+      final String batchYear = batchYearController.text.trim();
+
+      if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please fill in all fields'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      widget.onSave(title, batchName, batchYear, selectedIcon);
+      Navigator.pop(context);
+    } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
+        SnackBar(
+          content: Text('Failed to add course: $error'),
           behavior: SnackBarBehavior.floating,
         ),
       );
-      return;
     }
-
-    widget.onSave(
-      titleController.text,
-      batchNameController.text,
-      batchYearController.text,
-      selectedIcon,
-    );
   }
 
   void _showIconPicker(BuildContext context) {
     final List<IconData> icons = [
-      Icons.build,    // wrench/tool icon
-      Icons.book,     // book icon
+      Icons.build, // wrench/tool icon
+      Icons.book, // book icon
     ];
 
     showDialog(
@@ -183,7 +179,9 @@ class _CourseModalState extends State<CourseModal> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
+          color: isSelected
+              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              : null,
           border: isSelected
               ? Border.all(color: Theme.of(context).primaryColor)
               : null,
@@ -197,4 +195,4 @@ class _CourseModalState extends State<CourseModal> {
       ),
     );
   }
-} 
+}

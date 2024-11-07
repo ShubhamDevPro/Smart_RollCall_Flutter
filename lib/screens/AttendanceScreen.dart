@@ -1,24 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/student.dart';
+import 'package:smart_roll_call_flutter/services/firestore_service.dart';
+
 class AttendanceScreen extends StatefulWidget {
+  final String batchId;
+
+  AttendanceScreen({required this.batchId});
+
   @override
   _AttendanceScreenState createState() => _AttendanceScreenState();
 }
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
-  final List<Student> students = [
-    Student(name: 'Shubham Dev', enrollNumber: '001', isPresent: false),
-    Student(name: 'Karan Bhatia', enrollNumber: '002', isPresent: false),
-    Student(name: 'Chaitanya Gupta', enrollNumber: '003', isPresent: false),
-    Student(name: 'Deepak Kumar', enrollNumber: '004', isPresent: false),
-    Student(name: 'Avani Jain', enrollNumber: '005', isPresent: false),
-    Student(name: 'Naveen Sharma', enrollNumber: '006', isPresent: false),
-    Student(name: 'Harsh Thakur', enrollNumber: '007', isPresent: false),
-    Student(name: 'Vasudev Sharma', enrollNumber: '008', isPresent: false),
-    Student(name: 'Ayush Vishwakarma', enrollNumber: '009', isPresent: false),
-    Student(name: 'Dhruv Srivastava', enrollNumber: '010', isPresent: false),
-    Student(name: 'Shashikant Sharma', enrollNumber: '011', isPresent: false),
-  ];
+  final FirestoreService _firestoreService = FirestoreService();
+  List<Student> students = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _firestoreService.getStudents(widget.batchId).listen((snapshot) {
+      setState(() {
+        students = snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
+      });
+    });
+  }
+
+  void _saveAttendance() {
+    for (var student in students) {
+      _firestoreService.updateStudentAttendance(widget.batchId, student.enrollNumber, student.isPresent);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Attendance saved successfully!'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   int presentCount = 0;
 
@@ -162,17 +179,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: presentCount > 0 
-                    ? () {
-                        // TODO: Implement save functionality
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Attendance saved successfully!'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
-                    : null,
+                onPressed: presentCount > 0 ? _saveAttendance : null,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(56),
                   shape: RoundedRectangleBorder(

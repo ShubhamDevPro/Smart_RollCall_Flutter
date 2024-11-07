@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
 import 'package:smart_roll_call_flutter/screens/AttendanceHistory.dart';
 import 'package:smart_roll_call_flutter/screens/CourseModal.dart';
+import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -9,26 +10,31 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Map<String, dynamic>> courses = [
-    {
-      'icon': Icons.build,
-      'title': 'Control Systems ARI312',
-      'batchName': 'IIoT',
-      'batchYear': 2027,
-    },
-    {
-      'icon': Icons.book_rounded,
-      'title': 'Artificial Intelligence ARI314',
-      'batchName': 'AIML',
-      'batchYear': 2027,
-    },
-    {
-      'icon': Icons.build,
-      'title': 'Mechatronics',
-      'batchName': 'IIoT',
-      'batchYear': 2026,
-    },
-  ];
+  List<Map<String, dynamic>> courses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCourses();
+  }
+
+  void _loadCourses() {
+    final firestoreService = FirestoreService();
+    firestoreService.getBatches().listen((snapshot) {
+      setState(() {
+        courses = snapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return {
+            'icon': IconData(data['icon'], fontFamily: 'MaterialIcons'),
+            'title': data['title'],
+            'batchName': data['name'],
+            'batchYear': int.parse(data['year']),
+            'batchId': doc.id,
+          };
+        }).toList();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,23 +78,32 @@ class _MyHomePageState extends State<MyHomePage> {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            backgroundColor: Colors.transparent,
             builder: (context) => CourseModal(
-              onSave: (title, batchName, batchYear, iconData) {
-                setState(() {
-                  courses.add({
-                    'icon': iconData,
-                    'title': title,
-                    'batchName': batchName,
-                    'batchYear': int.parse(batchYear),
-                  });
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Course "$title" added successfully'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+              onSave: (title, batchName, batchYear, iconData) async {
+                final firestoreService = FirestoreService();
+                try {
+                  await firestoreService.addBatch(batchName, batchYear, iconData, title);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Course added successfully')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    String errorMessage = 'Error adding course';
+                    if (e.toString().contains('User not authenticated')) {
+                      errorMessage = 'Please sign in to add courses';
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(errorMessage),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
             ),
           );
@@ -158,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
         leading: Icon(icon, color: Colors.blue),
         title: Text(title),
         subtitle: Text('$batchName $batchYear'),
-        onTap: () => _showCourseOptions(context, title),
+        onTap: () => _showCourseOptions(context, title, index),
         onLongPress: () {
           showModalBottomSheet(
             context: context,
@@ -185,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _showCourseOptions(BuildContext context, String courseTitle) {
+  void _showCourseOptions(BuildContext context, String courseTitle, int index) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -237,7 +252,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AttendanceScreen(),
+                            builder: (context) => AttendanceScreen(
+                              batchId: courses[index]['batchId'],
+                            ),
                           ),
                         );
                       },

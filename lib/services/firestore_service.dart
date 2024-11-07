@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/student.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String userId = FirebaseAuth.instance.currentUser!.uid;
+  // Using a fixed userId for public access
+  final String userId = 'public_user';
 
   // Get batches for current user
   Stream<QuerySnapshot> getBatches() {
@@ -12,14 +13,17 @@ class FirestoreService {
         .collection('users')
         .doc(userId)
         .collection('batches')
+        .orderBy('createdAt', descending: true)
         .snapshots();
   }
 
   // Add new batch
-  Future<void> addBatch(String name, String year) {
+  Future<void> addBatch(String name, String year, IconData icon, String title) {
     return _firestore.collection('users').doc(userId).collection('batches').add({
       'name': name,
       'year': year,
+      'icon': icon.codePoint,
+      'title': title,
       'createdAt': Timestamp.now(),
     });
   }
@@ -48,5 +52,17 @@ class FirestoreService {
       'enrollNumber': student.enrollNumber,
       'isPresent': student.isPresent,
     });
+  }
+
+  // Update student attendance
+  Future<void> updateStudentAttendance(String batchId, String studentId, bool isPresent) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('batches')
+        .doc(batchId)
+        .collection('students')
+        .doc(studentId)
+        .update({'isPresent': isPresent});
   }
 } 
