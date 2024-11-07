@@ -7,17 +7,17 @@ class AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final List<Student> students = [
-    Student(name: 'Shubham Dev', rollNumber: '001'),
-    Student(name: 'Karan Bhatia', rollNumber: '002'),
-    Student(name: 'Chaitanya Gupta', rollNumber: '003'),
-    Student(name: 'Deepak Kumar', rollNumber: '004'),
-    Student(name: 'Avani Jain', rollNumber: '005'),
-    Student(name: 'Naveen Sharma', rollNumber: '006'),
-    Student(name: 'Harsh Thakur', rollNumber: '007'),
-    Student(name: 'Vasudev Sharma', rollNumber: '008'),
-    Student(name: 'Ayush Vishwakarma', rollNumber: '009'),
-    Student(name: 'Dhruv Srivastava', rollNumber: '010'),
-    Student(name: 'Shashikant Sharma', rollNumber: '011'),
+    Student(name: 'Shubham Dev', enrollNumber: '001', isPresent: false),
+    Student(name: 'Karan Bhatia', enrollNumber: '002', isPresent: false),
+    Student(name: 'Chaitanya Gupta', enrollNumber: '003', isPresent: false),
+    Student(name: 'Deepak Kumar', enrollNumber: '004', isPresent: false),
+    Student(name: 'Avani Jain', enrollNumber: '005', isPresent: false),
+    Student(name: 'Naveen Sharma', enrollNumber: '006', isPresent: false),
+    Student(name: 'Harsh Thakur', enrollNumber: '007', isPresent: false),
+    Student(name: 'Vasudev Sharma', enrollNumber: '008', isPresent: false),
+    Student(name: 'Ayush Vishwakarma', enrollNumber: '009', isPresent: false),
+    Student(name: 'Dhruv Srivastava', enrollNumber: '010', isPresent: false),
+    Student(name: 'Shashikant Sharma', enrollNumber: '011', isPresent: false),
   ];
 
   int presentCount = 0;
@@ -179,7 +179,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: Row(
+                child:const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
                     Icon(Icons.save_rounded),
@@ -274,7 +274,7 @@ class _StudentCardState extends State<StudentCard> {
           widget.student.name,
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
-        subtitle: Text('Roll No: ${widget.student.rollNumber}'),
+        subtitle: Text('Enrollment No: ${widget.student.enrollNumber}'),
         trailing: Transform.scale(
           scale: 1.2,
           child: Checkbox(

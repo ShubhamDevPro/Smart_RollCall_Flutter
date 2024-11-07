@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
 import 'package:smart_roll_call_flutter/screens/homescreen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

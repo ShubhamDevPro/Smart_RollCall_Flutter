@@ -1,19 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
 import 'package:smart_roll_call_flutter/screens/AttendanceHistory.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MyHomePage(),
-    );
-  }
-}
+import 'package:smart_roll_call_flutter/screens/CourseModal.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -23,19 +11,22 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> courses = [
     {
-      'icon': Icons.calculate,
+      'icon': Icons.build,
       'title': 'Control Systems ARI312',
-      'subtitle': 'IIoT 2023-2027',
+      'batchName': 'IIoT',
+      'batchYear': 2027,
     },
     {
-      'icon': Icons.edit,
+      'icon': Icons.book_rounded,
       'title': 'Artificial Intelligence ARI314',
-      'subtitle': 'IIoT 2022-2026',
+      'batchName': 'AIML',
+      'batchYear': 2027,
     },
     {
-      'icon': Icons.send,
-      'title': 'Digital Electronics ARD',
-      'subtitle': 'IIOT-202',
+      'icon': Icons.build,
+      'title': 'Mechatronics',
+      'batchName': 'IIoT',
+      'batchYear': 2026,
     },
   ];
 
@@ -70,19 +61,44 @@ class _MyHomePageState extends State<MyHomePage> {
             context: context,
             icon: courses[index]['icon'],
             title: courses[index]['title'],
-            subtitle: courses[index]['subtitle'],
+            batchName: courses[index]['batchName'],
+            batchYear: courses[index]['batchYear'],
             index: index,
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {}, // No action needed for now
-        child: Icon(Icons.add),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) => CourseModal(
+              onSave: (title, batchName, batchYear, iconData) {
+                setState(() {
+                  courses.add({
+                    'icon': iconData,
+                    'title': title,
+                    'batchName': batchName,
+                    'batchYear': int.parse(batchYear),
+                  });
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Course "$title" added successfully'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0, // Currently selected index
         onTap: (index) {}, // No action needed for now
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.group),
             label: 'Courses',
@@ -100,13 +116,13 @@ class _MyHomePageState extends State<MyHomePage> {
     required BuildContext context,
     required IconData icon,
     required String title,
-    required String subtitle,
+    required String batchName,
+    required int batchYear,
     required int index,
   }) {
     return Dismissible(
-      key: Key(title), // Using title as unique key
+      key: Key(title),
       confirmDismiss: (direction) async {
-        // Show confirmation dialog
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -120,19 +136,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text(
-                    'Delete',
-                    style: TextStyle(color: Colors.red),
-                  ),
+                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
               ],
             );
           },
         );
       },
-      onDismissed: (direction) {
-        onDismissed(index);
-      },
+      onDismissed: (direction) => onDismissed(index),
       background: Container(
         color: Colors.red,
         child: const Align(
@@ -146,63 +157,30 @@ class _MyHomePageState extends State<MyHomePage> {
       child: ListTile(
         leading: Icon(icon, color: Colors.blue),
         title: Text(title),
-        subtitle: Text(subtitle),
+        subtitle: Text('$batchName $batchYear'),
         onTap: () => _showCourseOptions(context, title),
-        onLongPress: () => _showEditDialog(context, title, subtitle, index),
-      ),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, String currentTitle, String currentSubtitle, int index) {
-    final titleController = TextEditingController(text: currentTitle);
-    final subtitleController = TextEditingController(text: currentSubtitle);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Course'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Course Title',
-                border: OutlineInputBorder(),
-              ),
+        onLongPress: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) => CourseModal(
+              initialTitle: title,
+              initialBatchName: batchName,
+              initialBatchYear: batchYear.toString(),
+              initialIcon: courses[index]['icon'],
+              onSave: (title, batchName, batchYear, iconData) {
+                setState(() {
+                  courses[index] = {
+                    'icon': iconData,
+                    'title': title,
+                    'batchName': batchName,
+                    'batchYear': int.parse(batchYear),
+                  };
+                });
+              },
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: subtitleController,
-              decoration: const InputDecoration(
-                labelText: 'Course Subtitle',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                courses[index] = {
-                  'icon': courses[index]['icon'],
-                  'title': titleController.text,
-                  'subtitle': subtitleController.text,
-                };
-              });
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Course updated successfully')),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
