@@ -15,7 +15,30 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<Map<String, dynamic>> courses = [
+    {
+      'icon': Icons.calculate,
+      'title': 'Control Systems ARI312',
+      'subtitle': 'IIoT 2023-2027',
+    },
+    {
+      'icon': Icons.edit,
+      'title': 'Artificial Intelligence ARI314',
+      'subtitle': 'IIoT 2022-2026',
+    },
+    {
+      'icon': Icons.send,
+      'title': 'Digital Electronics ARD',
+      'subtitle': 'IIOT-202',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,27 +63,17 @@ class MyHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        children: [
-          _buildCourseTile(
+      body: ListView.builder(
+        itemCount: courses.length,
+        itemBuilder: (context, index) {
+          return _buildCourseTile(
             context: context,
-            icon: Icons.calculate,
-            title: 'Control Systems ARI312',
-            subtitle: 'IIoT 2023-2027',
-          ),
-          _buildCourseTile(
-            context: context,
-            icon: Icons.edit,
-            title: 'Artificial Intelligence ARI314',
-            subtitle: 'IIoT 2022-2026',
-          ),
-          _buildCourseTile(
-            context: context,
-            icon: Icons.send,
-            title: 'Digital Electronics ARD',
-            subtitle: 'IIOT-202',
-          ),
-        ],
+            icon: courses[index]['icon'],
+            title: courses[index]['title'],
+            subtitle: courses[index]['subtitle'],
+            index: index,
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {}, // No action needed for now
@@ -88,12 +101,109 @@ class MyHomePage extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
+    required int index,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.blue),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      onTap: () => _showCourseOptions(context, title),
+    return Dismissible(
+      key: Key(title), // Using title as unique key
+      confirmDismiss: (direction) async {
+        // Show confirmation dialog
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Delete Course'),
+              content: const Text('This course will be permanently deleted. This action cannot be undone.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      onDismissed: (direction) {
+        onDismissed(index);
+      },
+      background: Container(
+        color: Colors.red,
+        child: const Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Icon(Icons.delete, color: Colors.white),
+          ),
+        ),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blue),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        onTap: () => _showCourseOptions(context, title),
+        onLongPress: () => _showEditDialog(context, title, subtitle, index),
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, String currentTitle, String currentSubtitle, int index) {
+    final titleController = TextEditingController(text: currentTitle);
+    final subtitleController = TextEditingController(text: currentSubtitle);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Course'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Course Title',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: subtitleController,
+              decoration: const InputDecoration(
+                labelText: 'Course Subtitle',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                courses[index] = {
+                  'icon': courses[index]['icon'],
+                  'title': titleController.text,
+                  'subtitle': subtitleController.text,
+                };
+              });
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Course updated successfully')),
+              );
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -212,5 +322,11 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void onDismissed(int index) {
+    setState(() {
+      courses.removeAt(index);
+    });
   }
 }
