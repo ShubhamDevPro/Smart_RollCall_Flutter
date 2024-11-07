@@ -19,7 +19,10 @@ class MyHomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Courses"),
-        leading: Icon(Icons.menu),
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {},
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.search),
