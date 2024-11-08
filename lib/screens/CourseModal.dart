@@ -115,33 +115,27 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
-  void _validateAndSave() async {
-    try {
-      // Validate all fields
-      final String title = titleController.text.trim();
-      final String batchName = batchNameController.text.trim();
-      final String batchYear = batchYearController.text.trim();
+  void _validateAndSave() {
+    // Validate all fields
+    final String title = titleController.text.trim();
+    final String batchName = batchNameController.text.trim();
+    final String batchYear = batchYearController.text.trim();
 
-      if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please fill in all fields'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-
-      widget.onSave(title, batchName, batchYear, selectedIcon);
-      Navigator.pop(context);
-    } catch (error) {
+    if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
+      if (!mounted) return;
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to add course: $error'),
+        const SnackBar(
+          content: Text('Please fill in all fields'),
           behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
     }
+
+    widget.onSave(title, batchName, batchYear, selectedIcon);
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   void _showIconPicker(BuildContext context) {
