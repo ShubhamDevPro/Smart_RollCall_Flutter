@@ -25,10 +25,10 @@ class _MyHomePageState extends State<MyHomePage> {
         courses = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return {
-            'icon': IconData(data['icon'], fontFamily: 'MaterialIcons'),
-            'title': data['title'],
-            'batchName': data['name'],
-            'batchYear': int.parse(data['year']),
+            'icon': IconData(data['icon'] ?? Icons.book.codePoint, fontFamily: 'MaterialIcons'),
+            'title': data['title'] ?? 'Untitled',
+            'batchName': data['batchName'] ?? '',
+            'batchYear': data['batchYear'] ?? '',
             'batchId': doc.id,
           };
         }).toList();
@@ -92,13 +92,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    String errorMessage = 'Error adding course';
-                    if (e.toString().contains('User not authenticated')) {
-                      errorMessage = 'Please sign in to add courses';
-                    }
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(errorMessage),
+                        content: Text('Error adding course'),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -132,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
     required IconData icon,
     required String title,
     required String batchName,
-    required int batchYear,
+    required dynamic batchYear,
     required int index,
   }) {
     return Dismissible(
@@ -181,7 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
             builder: (context) => CourseModal(
               initialTitle: title,
               initialBatchName: batchName,
-              initialBatchYear: batchYear.toString(),
+              initialBatchYear: batchYear,
               initialIcon: courses[index]['icon'],
               onSave: (title, batchName, batchYear, iconData) {
                 setState(() {
@@ -189,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     'icon': iconData,
                     'title': title,
                     'batchName': batchName,
-                    'batchYear': int.parse(batchYear),
+                    'batchYear': batchYear,
                   };
                 });
               },

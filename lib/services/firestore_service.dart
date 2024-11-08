@@ -4,7 +4,6 @@ import 'package:smart_roll_call_flutter/models/student.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // Using a fixed userId for public access
   final String userId = 'public_user';
 
   // Get batches for current user
@@ -20,8 +19,8 @@ class FirestoreService {
   // Add new batch
   Future<void> addBatch(String name, String year, IconData icon, String title) {
     return _firestore.collection('users').doc(userId).collection('batches').add({
-      'name': name,
-      'year': year,
+      'batchName': name,
+      'batchYear': year,
       'icon': icon.codePoint,
       'title': title,
       'createdAt': Timestamp.now(),

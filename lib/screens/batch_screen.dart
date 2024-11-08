@@ -5,6 +5,7 @@ import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
 
 
 class BatchScreen extends StatelessWidget {
+  BatchScreen ({super.key});
   final FirestoreService _firestoreService = FirestoreService();
 
   @override
