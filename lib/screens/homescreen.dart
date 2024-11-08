@@ -128,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
     required IconData icon,
     required String title,
     required String batchName,
-    required dynamic batchYear,
+    required String batchYear,
     required int index,
   }) {
     return Dismissible(
