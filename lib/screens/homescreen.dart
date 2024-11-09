@@ -232,26 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
         subtitle: Text('$batchName $batchYear'),
         onTap: () => _showCourseOptions(context, title, index),
         onLongPress: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => CourseModal(
-              initialTitle: title,
-              initialBatchName: batchName,
-              initialBatchYear: batchYear,
-              initialIcon: courses[index]['icon'],
-              onSave: (title, batchName, batchYear, iconData) {
-                setState(() {
-                  courses[index] = {
-                    'icon': iconData,
-                    'title': title,
-                    'batchName': batchName,
-                    'batchYear': batchYear,
-                  };
-                });
-              },
-            ),
-          );
+          _showEditCourseModal(context, courses[index], index);
         },
       ),
     );
@@ -372,6 +353,52 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showEditCourseModal(BuildContext context, Map<String, dynamic> course, int index) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => CourseModal(
+        initialTitle: course['title'],
+        initialBatchName: course['batchName'],
+        initialBatchYear: course['batchYear'],
+        initialIcon: course['icon'],
+        onSave: (title, batchName, batchYear, iconData) async {
+          try {
+            await _firestoreService.updateBatch(
+              course['batchId'],
+              title,
+              batchName,
+              batchYear,
+              iconData.codePoint,
+            );
+            setState(() {
+              courses[index] = {
+                'icon': iconData,
+                'title': title,
+                'batchName': batchName,
+                'batchYear': batchYear,
+                'batchId': course['batchId'],
+              };
+            });
+            if (!mounted) return;
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Course updated successfully')),
+            );
+          } catch (e) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error updating course: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
       ),
     );
   }

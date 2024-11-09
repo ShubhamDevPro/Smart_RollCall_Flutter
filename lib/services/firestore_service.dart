@@ -86,4 +86,25 @@ class FirestoreService {
     // Delete the batch itself
     await batchRef.delete();
   }
+
+  // Add this new method to FirestoreService class
+  Future<void> updateBatch(String batchId, String title, String batchName, String batchYear, int iconCodePoint) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .doc(batchId)
+          .update({
+        'title': title,
+        'batchName': batchName,
+        'batchYear': batchYear,
+        'icon': iconCodePoint,
+      });
+      print('Batch updated successfully with ID: $batchId');
+    } catch (e) {
+      print('Error updating batch: $e');
+      rethrow;
+    }
+  }
 }

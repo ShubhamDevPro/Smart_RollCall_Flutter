@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
+import 'package:smart_roll_call_flutter/screens/CourseModal.dart';
 
 /// A StatefulWidget that displays a list of batches/courses
 /// with swipe-to-delete functionality and navigation to attendance screen
@@ -122,12 +123,58 @@ class _BatchScreenState extends State<BatchScreen> {
                       builder: (context) => AttendanceScreen(batchId: doc.id),
                     ),
                   ),
+                  onLongPress: () => _showEditCourseModal(context, doc),
                 ),
               ),
             );
           }).toList(),
         );
       },
+    );
+  }
+
+  void _showEditCourseModal(BuildContext context, DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => CourseModal(
+        initialTitle: data['title'],
+        initialBatchName: data['batchName'],
+        initialBatchYear: data['batchYear'],
+        initialIcon: IconData(
+          data['icon'] ?? Icons.book.codePoint,
+          fontFamily: 'MaterialIcons',
+        ),
+        onSave: (title, batchName, batchYear, iconData) async {
+          try {
+            await _firestoreService.updateBatch(
+              doc.id,
+              title,
+              batchName,
+              batchYear,
+              iconData.codePoint,
+            );
+            if (!mounted) return;
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Course updated successfully')),
+            );
+          } catch (e) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error updating course: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 } 
