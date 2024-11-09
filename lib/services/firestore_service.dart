@@ -90,6 +90,7 @@ class FirestoreService {
   // Add this new method to FirestoreService class
   Future<void> updateBatch(String batchId, String title, String batchName, String batchYear, int iconCodePoint) async {
     try {
+      print('Updating batch with ID: $batchId');
       await _firestore
           .collection('users')
           .doc(userId)
@@ -101,7 +102,7 @@ class FirestoreService {
         'batchYear': batchYear,
         'icon': iconCodePoint,
       });
-      print('Batch updated successfully with ID: $batchId');
+      print('Batch updated successfully');
     } catch (e) {
       print('Error updating batch: $e');
       rethrow;

@@ -367,6 +367,8 @@ class _MyHomePageState extends State<MyHomePage> {
         initialBatchYear: course['batchYear'],
         initialIcon: course['icon'],
         onSave: (title, batchName, batchYear, iconData) async {
+          print('Attempting to update course with ID: ${course['batchId']}');
+          print('Title: $title, BatchName: $batchName, BatchYear: $batchYear, Icon: ${iconData.codePoint}');
           try {
             await _firestoreService.updateBatch(
               course['batchId'],
@@ -390,6 +392,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const SnackBar(content: Text('Course updated successfully')),
             );
           } catch (e) {
+            print('Error updating course: $e');
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

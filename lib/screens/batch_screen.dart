@@ -139,9 +139,7 @@ class _BatchScreenState extends State<BatchScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent, // Make background transparent
       builder: (context) => CourseModal(
         initialTitle: data['title'],
         initialBatchName: data['batchName'],
@@ -159,12 +157,17 @@ class _BatchScreenState extends State<BatchScreen> {
               batchYear,
               iconData.codePoint,
             );
+            
+            // Refresh the UI
+            setState(() {});
+            
             if (!mounted) return;
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Course updated successfully')),
             );
           } catch (e) {
+            print('Error updating course: $e'); // Add debug print
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

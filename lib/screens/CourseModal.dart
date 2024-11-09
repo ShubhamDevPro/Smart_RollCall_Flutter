@@ -8,7 +8,7 @@ class CourseModal extends StatefulWidget {
   final Function(
           String title, String batchName, String batchYear, IconData iconData)
       onSave;
-  
+
   // Optional initial values for editing an existing course
   final String? initialTitle;
   final String? initialBatchName;
@@ -35,24 +35,25 @@ class _CourseModalState extends State<CourseModal> {
       TextEditingController(text: widget.initialBatchName);
   late final batchYearController =
       TextEditingController(text: widget.initialBatchYear);
-  
+
   // Tracks whether the course is Theory or Practical based on the icon
   late String selectedCourseType = _getCourseTypeFromIcon(widget.initialIcon);
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        top: 16,
+        left: 16,
+        right: 16,
+      ),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -60,7 +61,9 @@ class _CourseModalState extends State<CourseModal> {
             Row(
               children: [
                 Text(
-                  widget.initialTitle == null ? 'Add New Course' : 'Edit Course',
+                  widget.initialTitle == null
+                      ? 'Add New Course'
+                      : 'Edit Course',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const Spacer(),
@@ -76,7 +79,10 @@ class _CourseModalState extends State<CourseModal> {
               children: [
                 CircleAvatar(
                   radius: 25,
-                  child: Icon(selectedCourseType == 'Practical' ? Icons.build : Icons.book, size: 30),
+                  child: Icon(
+                    selectedCourseType == 'Practical' ? Icons.build : Icons.book,
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
@@ -105,17 +111,23 @@ class _CourseModalState extends State<CourseModal> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _validateAndSave,
+              onPressed: _isLoading ? null : _validateAndSave,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
-                widget.initialTitle == null ? 'Create Course' : 'Update Course',
-                style: const TextStyle(fontSize: 16),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      widget.initialTitle == null ? 'Create Course' : 'Update Course',
+                      style: const TextStyle(fontSize: 16),
+                    ),
             ),
           ],
         ),
@@ -125,41 +137,35 @@ class _CourseModalState extends State<CourseModal> {
 
   // Validates form inputs and calls the onSave callback
   void _validateAndSave() async {
-    // Trim whitespace from all input fields
-    final String title = titleController.text.trim();
-    final String batchName = batchNameController.text.trim();
-    final String batchYear = batchYearController.text.trim();
-
-    // Show error if any field is empty
-    if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
+    // Basic validation
+    if (titleController.text.isEmpty ||
+        batchNameController.text.isEmpty ||
+        batchYearController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          behavior: SnackBarBehavior.floating,
-        ),
+        const SnackBar(content: Text('Please fill in all fields')),
       );
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
-      // Call the onSave callback
+      // Call the onSave callback with the current values
       await widget.onSave(
-          title, batchName, batchYear, _getIconFromCourseType(selectedCourseType));
-      
-      // If we reach here without throwing an error, consider it successful
-      if (mounted) {
-        Navigator.of(context).pop(true);
-      }
+        titleController.text,
+        batchNameController.text,
+        batchYearController.text,
+        _getIconData(),
+      );
     } catch (e) {
-      // Handle any errors during save operation
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error adding course: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error: $e')),
       );
-      Navigator.of(context).pop(false);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -176,7 +182,9 @@ class _CourseModalState extends State<CourseModal> {
           height: 100,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: courseTypes.map((type) => _buildCourseTypeOption(type)).toList(),
+            children: courseTypes
+                .map((type) => _buildCourseTypeOption(type))
+                .toList(),
           ),
         ),
         actions: [
@@ -218,5 +226,18 @@ class _CourseModalState extends State<CourseModal> {
         Navigator.pop(context);
       },
     );
+  }
+
+  // Add this method to get the appropriate IconData
+  IconData _getIconData() {
+    return selectedCourseType == 'Practical' ? Icons.build : Icons.book;
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    batchNameController.dispose();
+    batchYearController.dispose();
+    super.dispose();
   }
 }
