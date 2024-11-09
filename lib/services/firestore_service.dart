@@ -170,4 +170,87 @@ class FirestoreService {
         .where('date', isEqualTo: Timestamp.fromDate(date))
         .snapshots();
   }
+
+  // Add this new method to get attendance for all students on a specific date
+  Future<List<Map<String, dynamic>>> getAttendanceForDateAll(DateTime date) async {
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    List<Map<String, dynamic>> attendanceList = [];
+
+    try {
+      // Get all batches
+      final batchesSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .get();
+
+      // For each batch
+      for (var batch in batchesSnapshot.docs) {
+        // Get all students in the batch
+        final studentsSnapshot = await batch.reference
+            .collection('students')
+            .get();
+
+        // For each student
+        for (var student in studentsSnapshot.docs) {
+          // Get attendance for the specific date
+          final attendanceSnapshot = await student.reference
+              .collection('attendance')
+              .doc(dateStr)
+              .get();
+
+          if (attendanceSnapshot.exists) {
+            attendanceList.add({
+              'name': student.data()['name'],
+              'enrollNumber': student.data()['enrollNumber'],
+              'isPresent': attendanceSnapshot.data()?['isPresent'] ?? false,
+              'batchId': batch.id,
+            });
+          }
+        }
+      }
+
+      return attendanceList;
+    } catch (e) {
+      print('Error getting attendance: $e');
+      rethrow;
+    }
+  }
+
+  // Add this new method to update attendance status
+  Future<void> updateAttendanceStatus(
+    String batchId,
+    String enrollNumber,
+    DateTime date,
+    bool newStatus,
+  ) async {
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    
+    try {
+      // First, find the student document
+      final studentsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .doc(batchId)
+          .collection('students')
+          .where('enrollNumber', isEqualTo: enrollNumber)
+          .get();
+
+      if (studentsSnapshot.docs.isEmpty) {
+        throw 'Student not found';
+      }
+
+      // Update the attendance status
+      final studentDoc = studentsSnapshot.docs.first;
+      await studentDoc.reference
+          .collection('attendance')
+          .doc(dateStr)
+          .update({'isPresent': newStatus});
+        
+    } catch (e) {
+      print('Error updating attendance status: $e');
+      rethrow;
+    }
+  }
 }

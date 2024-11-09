@@ -240,9 +240,14 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(title),
         subtitle: Text('$batchName $batchYear'),
         onTap: () => _showCourseOptions(context, title, index), // Show course options
-        onLongPress: () {
-          _showEditCourseModal(context, courses[index], index); // Show edit modal
-        },
+        onLongPress: () => _showEditCourseModal(context, courses[index], index), // Show edit modal
+        trailing: IconButton(
+          icon: const Icon(
+            Icons.edit,
+            color: Colors.blue,
+          ),
+          onPressed: () => _showEditCourseModal(context, courses[index], index),
+        ),
       ),
     );
   }

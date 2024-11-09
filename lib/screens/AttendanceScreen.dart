@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/student.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 import 'package:smart_roll_call_flutter/widgets/AddStudentModal.dart';
+import 'package:smart_roll_call_flutter/screens/AttendanceHistory.dart';
 
 class AttendanceScreen extends StatefulWidget {
   final String batchId;
@@ -61,13 +62,26 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         attendanceData,
       );
 
+      if (!mounted) return;
+
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Attendance saved successfully!'),
           behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2), // Reduced duration for smoother transition
+        ),
+      );
+
+      // Navigate to AttendanceHistory screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AttendanceHistoryScreen(),
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error saving attendance: $e'),
@@ -97,6 +111,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         student.isPresent = false;
       }
       presentCount = 0;
+    });
+  }
+
+  void _toggleSelectAll() {
+    setState(() {
+      bool allSelected = presentCount == students.length;
+      // Toggle all students to opposite of current state
+      for (var student in students) {
+        student.isPresent = !allSelected;
+      }
+      // Update present count
+      presentCount = allSelected ? 0 : students.length;
     });
   }
 
@@ -238,6 +264,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                TextButton.icon(
+                  onPressed: students.isEmpty ? null : _toggleSelectAll,
+                  icon: Icon(
+                    presentCount == students.length ? Icons.deselect : Icons.select_all,
+                    size: 20,
+                  ),
+                  label: Text(
+                    presentCount == students.length ? 'Deselect All' : 'Select All',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Chip(
                   label: Text(
                     '${presentCount}/${students.length}',
