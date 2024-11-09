@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_roll_call_flutter/models/student.dart';
+
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -86,4 +86,4 @@ class FirestoreService {
     // Delete the batch itself
     await batchRef.delete();
   }
-} 
+}

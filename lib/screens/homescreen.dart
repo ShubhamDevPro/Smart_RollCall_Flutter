@@ -21,6 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _loadCourses() {
+    setState(() => _isLoading = true);
     _firestoreService.getBatches().listen(
       (snapshot) {
         if (mounted) {
@@ -92,6 +93,44 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Courses"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: Implement search functionality
+              showSearch(
+                context: context,
+                delegate: CourseSearchDelegate(courses: courses),
+              );
+            },
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Course'),
+              onTap: () => Navigator.pop(context),
+            ),
+            // Add more drawer items as needed
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+        ],
+        onTap: (index) {
+          // Handle navigation
+        },
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -152,28 +191,22 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         );
       },
-      onDismissed: (direction) {
+      onDismissed: (direction) async {
         // Store the course data before removing it
         final deletedCourse = courses[index];
-        
-        // Remove from local state immediately
-        setState(() {
-          courses.removeAt(index);
-        });
+        final deletedIndex = index;
 
-        // Delete from Firebase
-        _firestoreService.deleteBatch(deletedCourse['batchId']).then((_) {
+        try {
+          // Delete from Firebase first
+          await _firestoreService.deleteBatch(deletedCourse['batchId']);
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Course deleted successfully')),
             );
           }
-        }).catchError((error) {
+        } catch (error) {
           if (mounted) {
-            setState(() {
-              courses.insert(index, deletedCourse);
-            });
-            
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Error deleting course: $error'),
@@ -181,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             );
           }
-        });
+        }
       },
       background: Container(
         color: Colors.red,
@@ -340,6 +373,63 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CourseSearchDelegate extends SearchDelegate {
+  final List<Map<String, dynamic>> courses;
+
+  CourseSearchDelegate({required this.courses});
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () => query = '',
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return buildSearchResults();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return buildSearchResults();
+  }
+
+  Widget buildSearchResults() {
+    final results = courses.where((course) =>
+        course['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
+        course['batchName'].toString().toLowerCase().contains(query.toLowerCase()) ||
+        course['batchYear'].toString().toLowerCase().contains(query.toLowerCase())
+    ).toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final course = results[index];
+        return ListTile(
+          leading: Icon(course['icon'] as IconData),
+          title: Text(course['title']),
+          subtitle: Text('${course['batchName']} ${course['batchYear']}'),
+          onTap: () {
+            close(context, course);
+          },
+        );
+      },
     );
   }
 }

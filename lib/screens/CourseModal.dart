@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/batches.dart';
 
+// A modal widget that handles both creating and editing course information
 class CourseModal extends StatefulWidget {
+  // Callback function that will be called when saving the course
+  // Takes course details as parameters and handles the save operation
   final Function(
           String title, String batchName, String batchYear, IconData iconData)
       onSave;
+  
+  // Optional initial values for editing an existing course
   final String? initialTitle;
   final String? initialBatchName;
   final String? initialBatchYear;
@@ -24,11 +29,14 @@ class CourseModal extends StatefulWidget {
 }
 
 class _CourseModalState extends State<CourseModal> {
+  // Text controllers initialized with initial values if editing, or empty if creating new
   late final titleController = TextEditingController(text: widget.initialTitle);
   late final batchNameController =
       TextEditingController(text: widget.initialBatchName);
   late final batchYearController =
       TextEditingController(text: widget.initialBatchYear);
+  
+  // Tracks whether the course is Theory or Practical based on the icon
   late String selectedCourseType = _getCourseTypeFromIcon(widget.initialIcon);
 
   @override
@@ -115,11 +123,14 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
+  // Validates form inputs and calls the onSave callback
   void _validateAndSave() async {
+    // Trim whitespace from all input fields
     final String title = titleController.text.trim();
     final String batchName = batchNameController.text.trim();
     final String batchYear = batchYearController.text.trim();
 
+    // Show error if any field is empty
     if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -131,11 +142,16 @@ class _CourseModalState extends State<CourseModal> {
     }
 
     try {
-      final success = await widget.onSave(title, batchName, batchYear, _getIconFromCourseType(selectedCourseType));
+      // Call the onSave callback and wait for result
+      final success = await widget.onSave(
+          title, batchName, batchYear, _getIconFromCourseType(selectedCourseType));
+      
+      // Close modal with success status if save was successful
       if (success && mounted) {
-        Navigator.of(context).pop(true);  // Return true to indicate success
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
+      // Handle any errors during save operation
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -143,10 +159,11 @@ class _CourseModalState extends State<CourseModal> {
           backgroundColor: Colors.red,
         ),
       );
-      Navigator.of(context).pop(false);  // Return false to indicate failure
+      Navigator.of(context).pop(false);
     }
   }
 
+  // Shows a dialog to select course type (Theory/Practical)
   void _showCourseTypePicker(BuildContext context) {
     final List<String> courseTypes = ['Theory', 'Practical'];
 
@@ -167,6 +184,16 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
+  // Helper method to convert icon to course type string
+  String _getCourseTypeFromIcon(IconData? icon) {
+    return icon == Icons.build ? 'Practical' : 'Theory';
+  }
+
+  // Helper method to convert course type string to corresponding icon
+  IconData _getIconFromCourseType(String type) {
+    return type == 'Practical' ? Icons.build : Icons.book;
+  }
+
   Widget _buildCourseTypeOption(String type) {
     final isSelected = selectedCourseType == type;
     return ListTile(
@@ -181,13 +208,5 @@ class _CourseModalState extends State<CourseModal> {
         Navigator.pop(context);
       },
     );
-  }
-
-  String _getCourseTypeFromIcon(IconData? icon) {
-    return icon == Icons.build ? 'Practical' : 'Theory';
-  }
-
-  IconData _getIconFromCourseType(String type) {
-    return type == 'Practical' ? Icons.build : Icons.book;
   }
 }
