@@ -29,7 +29,7 @@ class _CourseModalState extends State<CourseModal> {
       TextEditingController(text: widget.initialBatchName);
   late final batchYearController =
       TextEditingController(text: widget.initialBatchYear);
-  late IconData selectedIcon = widget.initialIcon ?? Icons.book;
+  late String selectedCourseType = _getCourseTypeFromIcon(widget.initialIcon);
 
   @override
   Widget build(BuildContext context) {
@@ -68,13 +68,13 @@ class _CourseModalState extends State<CourseModal> {
               children: [
                 CircleAvatar(
                   radius: 25,
-                  child: Icon(selectedIcon, size: 30),
+                  child: Icon(selectedCourseType == 'Practical' ? Icons.build : Icons.book, size: 30),
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
-                  onPressed: () => _showIconPicker(context),
+                  onPressed: () => _showCourseTypePicker(context),
                   icon: const Icon(Icons.edit),
-                  label: const Text('Change Icon'),
+                  label: const Text('Change Course Type'),
                 ),
               ],
             ),
@@ -131,7 +131,7 @@ class _CourseModalState extends State<CourseModal> {
     }
 
     try {
-      final success = await widget.onSave(title, batchName, batchYear, selectedIcon);
+      final success = await widget.onSave(title, batchName, batchYear, _getIconFromCourseType(selectedCourseType));
       if (success && mounted) {
         Navigator.of(context).pop(true);  // Return true to indicate success
       }
@@ -147,20 +147,15 @@ class _CourseModalState extends State<CourseModal> {
     }
   }
 
-  void _showIconPicker(BuildContext context) {
-    final List<IconData> icons = [
-      Icons.build, // wrench/tool icon
-      Icons.book, // book icon
-    ];
+  void _showCourseTypePicker(BuildContext context) {
+    final List<String> courseTypes = ['Theory', 'Practical'];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Icon'),
-        content: Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: icons.map((icon) => _buildIconOption(icon)).toList(),
+        title: const Text('Select Course Type'),
+        content: Column(
+          children: courseTypes.map((type) => _buildCourseTypeOption(type)).toList(),
         ),
         actions: [
           TextButton(
@@ -172,30 +167,27 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
-  Widget _buildIconOption(IconData icon) {
-    final isSelected = selectedIcon == icon;
-    return InkWell(
-      onTap: () {
-        setState(() => selectedIcon = icon);
-        Navigator.pop(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
-              : null,
-          border: isSelected
-              ? Border.all(color: Theme.of(context).primaryColor)
-              : null,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
-          size: 30,
+  Widget _buildCourseTypeOption(String type) {
+    final isSelected = selectedCourseType == type;
+    return ListTile(
+      title: Text(
+        type,
+        style: TextStyle(
           color: isSelected ? Theme.of(context).primaryColor : null,
         ),
       ),
+      onTap: () {
+        setState(() => selectedCourseType = type);
+        Navigator.pop(context);
+      },
     );
+  }
+
+  String _getCourseTypeFromIcon(IconData? icon) {
+    return icon == Icons.build ? 'Practical' : 'Theory';
+  }
+
+  IconData _getIconFromCourseType(String type) {
+    return type == 'Practical' ? Icons.build : Icons.book;
   }
 }

@@ -44,18 +44,14 @@ class FirestoreService {
   }
 
   // Add student to batch
-  Future<void> addStudent(String batchId, Student student) {
-    return _firestore
+  Future<void> addStudent(String batchId, Map<String, dynamic> studentData) async {
+    await _firestore
         .collection('users')
         .doc(userId)
         .collection('batches')
         .doc(batchId)
         .collection('students')
-        .add({
-      'name': student.name,
-      'enrollNumber': student.enrollNumber,
-      'isPresent': student.isPresent,
-    });
+        .add(studentData);
   }
 
   // Update student attendance

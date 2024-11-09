@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/student.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
+import 'package:smart_roll_call_flutter/widgets/AddStudentModal.dart';
 
 class AttendanceScreen extends StatefulWidget {
   final String batchId;
@@ -201,6 +202,19 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => AddStudentModal(batchId: widget.batchId),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
