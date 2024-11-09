@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:html' as html;
+import 'package:excel/excel.dart';
+
+// Conditional import for web
+export 'attendance_history_web.dart' if (dart.library.io) 'attendance_history_mobile.dart';
+
 /// Screen widget to display and manage attendance history
 class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key});
@@ -114,11 +124,197 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  Future<void> _exportToExcel() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final data = await _firestoreService.getAllAttendanceData();
+      final List<String> dates = data['dates'];
+      final Map<String, Map<String, bool>> studentAttendance = data['studentAttendance'];
+      final Map<String, Map<String, String>> studentInfo = data['studentInfo'];
+
+      final excel = Excel.createExcel();
+      final Sheet sheet = excel['Attendance Record'];
+
+      // Style for header row
+      CellStyle headerStyle = CellStyle(
+        bold: true,
+        backgroundColorHex: '#CCCCCC',
+        horizontalAlign: HorizontalAlign.Center,
+      );
+
+      // Add headers
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
+        ..value = 'Name'
+        ..cellStyle = headerStyle;
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
+        ..value = 'Enrollment Number'
+        ..cellStyle = headerStyle;
+
+      // Add date headers
+      for (int i = 0; i < dates.length; i++) {
+        final DateTime dateTime = DateTime.parse(dates[i]);
+        final String formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i + 2, rowIndex: 0))
+          ..value = formattedDate
+          ..cellStyle = headerStyle;
+      }
+
+      // Add statistics headers
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: dates.length + 2, rowIndex: 0))
+        ..value = 'Total Classes Attended'
+        ..cellStyle = headerStyle;
+      sheet.cell(CellIndex.indexByColumnRow(columnIndex: dates.length + 3, rowIndex: 0))
+        ..value = 'Attendance Percentage'
+        ..cellStyle = headerStyle;
+
+      // Add student data
+      int rowIndex = 1;
+      studentInfo.forEach((enrollNumber, info) {
+        // Add student name and enrollment number
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
+          .value = info['name'];
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex))
+          .value = enrollNumber;
+
+        // Calculate attendance statistics
+        int totalClasses = 0;
+        int classesAttended = 0;
+
+        // Add attendance for each date
+        for (int i = 0; i < dates.length; i++) {
+          final attendance = studentAttendance[enrollNumber]?[dates[i]];
+          final cell = sheet.cell(CellIndex.indexByColumnRow(
+            columnIndex: i + 2,
+            rowIndex: rowIndex,
+          ));
+          
+          cell.value = attendance == null ? 'N/A' : (attendance ? 'Present' : 'Absent');
+          
+          // Update statistics
+          if (attendance != null) {
+            totalClasses++;
+            if (attendance) classesAttended++;
+          }
+          
+          // Style for attendance cells
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Center,
+            backgroundColorHex: attendance == null 
+                ? '#FFFFFF'
+                : (attendance ? '#E6FFE6' : '#FFE6E6'),
+          );
+        }
+
+        // Add statistics cells
+        final attendanceCell = sheet.cell(CellIndex.indexByColumnRow(
+          columnIndex: dates.length + 2,
+          rowIndex: rowIndex,
+        ));
+        attendanceCell.value = '$classesAttended/$totalClasses';
+        attendanceCell.cellStyle = CellStyle(
+          horizontalAlign: HorizontalAlign.Center,
+          bold: true,
+        );
+
+        final percentageCell = sheet.cell(CellIndex.indexByColumnRow(
+          columnIndex: dates.length + 3,
+          rowIndex: rowIndex,
+        ));
+        final percentage = totalClasses > 0 
+            ? (classesAttended / totalClasses * 100).toStringAsFixed(1) + '%'
+            : '0.0%';
+        percentageCell.value = percentage;
+        percentageCell.cellStyle = CellStyle(
+          horizontalAlign: HorizontalAlign.Center,
+          bold: true,
+          backgroundColorHex: totalClasses > 0 && (classesAttended / totalClasses) >= 0.75 
+              ? '#E6FFE6' 
+              : '#FFE6E6',
+        );
+
+        rowIndex++;
+      });
+
+      // Auto-fit columns
+      sheet.setColWidth(0, 25); // Name column
+      sheet.setColWidth(1, 20); // Enrollment number column
+      for (int i = 2; i < dates.length + 2; i++) {
+        sheet.setColWidth(i, 15); // Date columns
+      }
+      sheet.setColWidth(dates.length + 2, 20); // Total attended column
+      sheet.setColWidth(dates.length + 3, 20); // Percentage column
+
+      // Generate Excel file bytes
+      final List<int>? excelBytes = excel.encode();
+      
+      if (excelBytes == null) throw 'Failed to generate Excel file';
+
+      if (kIsWeb) {
+        await downloadExcelFile(
+          excelBytes, 
+          "attendance_${DateTime.now().millisecondsSinceEpoch}.xlsx"
+        );
+      } else {
+        throw UnsupportedError('Downloading Excel files is only supported on web platform');
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Attendance data exported successfully'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error exporting data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> downloadExcelFile(List<int> bytes, String fileName) {
+    final blob = html.Blob([bytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute("download", fileName)
+      ..click();
+    html.Url.revokeObjectUrl(url);
+    return Future.value();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Attendance History'),
+        actions: [
+          // Add export button in AppBar
+          IconButton(
+            icon: isLoading 
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.file_download),
+            tooltip: 'Export to Excel',
+            onPressed: isLoading ? null : _exportToExcel,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -258,6 +454,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             enrollNumber: student['enrollNumber'],
                             isPresent: student['isPresent'],
                             onStatusChanged: () => _updateAttendanceStatus(student),
+                            totalDays: student['totalDays'] ?? 0,
+                            presentDays: student['presentDays'] ?? 0,
                           );
                         },
                       ),
@@ -305,17 +503,25 @@ class AttendanceHistoryCard extends StatelessWidget {
   final String enrollNumber;
   final bool isPresent;
   final VoidCallback onStatusChanged;
+  final int totalDays;
+  final int presentDays;
 
   const AttendanceHistoryCard({
     required this.name,
     required this.enrollNumber,
     required this.isPresent,
     required this.onStatusChanged,
+    this.totalDays = 0,
+    this.presentDays = 0,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final attendancePercentage = totalDays > 0 
+        ? (presentDays / totalDays * 100).toStringAsFixed(1) 
+        : '0.0';
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -323,17 +529,48 @@ class AttendanceHistoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: onStatusChanged, // Make the entire card tappable
+        onTap: onStatusChanged,
         borderRadius: BorderRadius.circular(12),
         child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: isPresent 
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
-            child: Icon(
-              isPresent ? Icons.check : Icons.close,
-              color: isPresent ? Colors.green : Colors.red,
-            ),
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Attendance Statistics
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$presentDays/$totalDays',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    '$attendancePercentage%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: double.parse(attendancePercentage) >= 75 
+                          ? Colors.green 
+                          : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+              // Present/Absent Icon
+              CircleAvatar(
+                backgroundColor: isPresent 
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.red.withOpacity(0.1),
+                child: Icon(
+                  isPresent ? Icons.check : Icons.close,
+                  color: isPresent ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
           ),
           title: Text(
             name,

@@ -177,22 +177,29 @@ class FirestoreService {
     List<Map<String, dynamic>> attendanceList = [];
 
     try {
-      // Get all batches
       final batchesSnapshot = await _firestore
           .collection('users')
           .doc(userId)
           .collection('batches')
           .get();
 
-      // For each batch
       for (var batch in batchesSnapshot.docs) {
-        // Get all students in the batch
         final studentsSnapshot = await batch.reference
             .collection('students')
             .get();
 
-        // For each student
         for (var student in studentsSnapshot.docs) {
+          // Get all attendance records for this student
+          final allAttendanceSnapshot = await student.reference
+              .collection('attendance')
+              .get();
+
+          // Calculate attendance statistics
+          int totalDays = allAttendanceSnapshot.docs.length;
+          int presentDays = allAttendanceSnapshot.docs
+              .where((doc) => doc.data()['isPresent'] == true)
+              .length;
+
           // Get attendance for the specific date
           final attendanceSnapshot = await student.reference
               .collection('attendance')
@@ -205,6 +212,8 @@ class FirestoreService {
               'enrollNumber': student.data()['enrollNumber'],
               'isPresent': attendanceSnapshot.data()?['isPresent'] ?? false,
               'batchId': batch.id,
+              'totalDays': totalDays,
+              'presentDays': presentDays,
             });
           }
         }
@@ -250,6 +259,64 @@ class FirestoreService {
         
     } catch (e) {
       print('Error updating attendance status: $e');
+      rethrow;
+    }
+  }
+
+  // Add this new method to get all attendance dates and data
+  Future<Map<String, dynamic>> getAllAttendanceData() async {
+    try {
+      Set<String> allDates = {};
+      Map<String, Map<String, bool>> studentAttendance = {};
+      Map<String, Map<String, String>> studentInfo = {};
+
+      // Get all batches
+      final batchesSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .get();
+
+      // For each batch
+      for (var batch in batchesSnapshot.docs) {
+        // Get all students in the batch
+        final studentsSnapshot = await batch.reference
+            .collection('students')
+            .get();
+
+        // For each student
+        for (var student in studentsSnapshot.docs) {
+          final enrollNumber = student.data()['enrollNumber'] as String;
+          
+          // Store student info
+          studentInfo[enrollNumber] = {
+            'name': student.data()['name'] as String,
+            'enrollNumber': enrollNumber,
+          };
+
+          // Get all attendance records for this student
+          final attendanceSnapshot = await student.reference
+              .collection('attendance')
+              .get();
+
+          // Store attendance data and collect dates
+          Map<String, bool> dates = {};
+          for (var attendance in attendanceSnapshot.docs) {
+            final date = attendance.id; // Using the document ID which is the date string
+            dates[date] = attendance.data()['isPresent'] as bool;
+            allDates.add(date);
+          }
+          studentAttendance[enrollNumber] = dates;
+        }
+      }
+
+      return {
+        'dates': allDates.toList()..sort(),
+        'studentAttendance': studentAttendance,
+        'studentInfo': studentInfo,
+      };
+    } catch (e) {
+      print('Error getting all attendance data: $e');
       rethrow;
     }
   }
