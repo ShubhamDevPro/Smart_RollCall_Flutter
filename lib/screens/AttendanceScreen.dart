@@ -15,6 +15,8 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   List<Student> students = [];
+  List<Student> filteredStudents = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -22,8 +24,27 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     _firestoreService.getStudents(widget.batchId).listen((snapshot) {
       setState(() {
         students = snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
+        filteredStudents = students;
       });
     });
+  }
+
+  void _filterStudents(String query) {
+    setState(() {
+      filteredStudents = students.where((student) {
+        final nameLower = student.name.toLowerCase();
+        final enrollLower = student.enrollNumber.toLowerCase();
+        final searchLower = query.toLowerCase();
+        return nameLower.contains(searchLower) || 
+               enrollLower.contains(searchLower);
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _saveAttendance() async {
@@ -116,11 +137,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Today\'s Attendance',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 16,
+                    Flexible(
+                      child: Text(
+                        'Today\'s Attendance',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -134,30 +158,68 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildStatCard(
-                      'Total',
-                      '${students.length}',
-                      Icons.groups_rounded,
-                      Theme.of(context).primaryColor.withBlue(255),
-                    ),
-                    _buildStatCard(
-                      'Present',
-                      '$presentCount',
-                      Icons.check_circle_rounded,
-                      Colors.green,
-                    ),
-                    _buildStatCard(
-                      'Absent',
-                      '$absentCount',
-                      Icons.cancel_rounded,
-                      Colors.red,
-                    ),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: _buildStatCard(
+                          'Total',
+                          '${students.length}',
+                          Icons.groups_rounded,
+                          Theme.of(context).primaryColor.withBlue(255),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: _buildStatCard(
+                          'Present',
+                          '$presentCount',
+                          Icons.check_circle_rounded,
+                          Colors.green,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: _buildStatCard(
+                          'Absent',
+                          '$absentCount',
+                          Icons.cancel_rounded,
+                          Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search by name or enrollment number',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _filterStudents('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+              onChanged: _filterStudents,
             ),
           ),
           Padding(
@@ -165,12 +227,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Students List',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                Expanded(
+                  child: Text(
+                    'Students List',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Chip(
@@ -184,45 +249,51 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: students.length,
-              itemBuilder: (context, index) {
-                return StudentCard(
-                  student: students[index],
-                  onChanged: _updateAttendance,
-                );
-              },
-            ),
+            child: filteredStudents.isEmpty
+                ? Center(
+                    child: Text(
+                      'No students found',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredStudents.length,
+                    itemBuilder: (context, index) {
+                      return StudentCard(
+                        student: filteredStudents[index],
+                        onChanged: _updateAttendance,
+                      );
+                    },
+                  ),
           ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Spacer(),
-                  ElevatedButton(
-                    onPressed: presentCount > 0 ? _saveAttendance : null,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(150, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.save_rounded),
-                        SizedBox(width: 8),
-                        Text(
-                          'Save Attendance',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: presentCount > 0 ? _saveAttendance : null,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(150, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  Spacer(),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.save_rounded),
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          'Save Attendance',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -245,38 +316,43 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: color,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+    return SizedBox(
+      width: 100,
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 28,
                 color: color,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
