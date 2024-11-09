@@ -115,15 +115,12 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
-  void _validateAndSave() {
-    // Validate all fields
+  void _validateAndSave() async {
     final String title = titleController.text.trim();
     final String batchName = batchNameController.text.trim();
     final String batchYear = batchYearController.text.trim();
 
     if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
-      if (!mounted) return;
-      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields'),
@@ -133,9 +130,21 @@ class _CourseModalState extends State<CourseModal> {
       return;
     }
 
-    widget.onSave(title, batchName, batchYear, selectedIcon);
-    if (!mounted) return;
-    Navigator.pop(context);
+    try {
+      final success = await widget.onSave(title, batchName, batchYear, selectedIcon);
+      if (success && mounted) {
+        Navigator.of(context).pop(true);  // Return true to indicate success
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding course: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.of(context).pop(false);  // Return false to indicate failure
+    }
   }
 
   void _showIconPicker(BuildContext context) {

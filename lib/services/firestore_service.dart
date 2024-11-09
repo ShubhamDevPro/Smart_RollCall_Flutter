@@ -17,14 +17,19 @@ class FirestoreService {
   }
 
   // Add new batch
-  Future<void> addBatch(String name, String year, IconData icon, String title) {
-    return _firestore.collection('users').doc(userId).collection('batches').add({
-      'batchName': name,
-      'batchYear': year,
-      'icon': icon.codePoint,
-      'title': title,
-      'createdAt': Timestamp.now(),
-    });
+  Future<DocumentReference> addBatch(String name, String year, IconData icon, String title) async {
+    try {
+      return await _firestore.collection('users').doc(userId).collection('batches').add({
+        'batchName': name,
+        'batchYear': year,
+        'icon': icon.codePoint,
+        'title': title,
+        'createdAt': Timestamp.now(),
+      });
+    } catch (e) {
+      print('Error adding batch: $e');
+      rethrow;
+    }
   }
 
   // Get students in a batch

@@ -11,6 +11,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> courses = [];
+  final FirestoreService _firestoreService = FirestoreService();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -19,106 +21,100 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _loadCourses() {
-    final firestoreService = FirestoreService();
-    firestoreService.getBatches().listen((snapshot) {
-      setState(() {
-        courses = snapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return {
-            'icon': IconData(data['icon'] ?? Icons.book.codePoint, fontFamily: 'MaterialIcons'),
-            'title': data['title'] ?? 'Untitled',
-            'batchName': data['batchName'] ?? '',
-            'batchYear': data['batchYear'] ?? '',
-            'batchId': doc.id,
-          };
-        }).toList();
-      });
-    });
+    _firestoreService.getBatches().listen(
+      (snapshot) {
+        if (mounted) {
+          setState(() {
+            courses = snapshot.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              return {
+                'icon': IconData(data['icon'] ?? Icons.book.codePoint, fontFamily: 'MaterialIcons'),
+                'title': data['title'] ?? 'Untitled',
+                'batchName': data['batchName'] ?? '',
+                'batchYear': data['batchYear'] ?? '',
+                'batchId': doc.id,
+              };
+            }).toList();
+            _isLoading = false;
+          });
+        }
+      },
+      onError: (error) {
+        print('Error loading courses: $error');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      },
+    );
+  }
+
+  Future<void> _addCourse() async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CourseModal(
+        onSave: (title, batchName, batchYear, iconData) async {
+          try {
+            setState(() => _isLoading = true);
+            await _firestoreService.addBatch(batchName, batchYear, iconData, title);
+            return true;
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error adding course: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+            return false;
+          } finally {
+            if (mounted) {
+              setState(() => _isLoading = false);
+            }
+          }
+        },
+      ),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Course added successfully')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Courses"),
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {}, // No action needed for now
-          ),
-          IconButton(
-            icon: Icon(Icons.check),
-            onPressed: () {}, // No action needed for now
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () {}, // No action needed for now
-          ),
-        ],
+        title: const Text("Courses"),
       ),
-      body: ListView.builder(
-        itemCount: courses.length,
-        itemBuilder: (context, index) {
-          return _buildCourseTile(
-            context: context,
-            icon: courses[index]['icon'],
-            title: courses[index]['title'],
-            batchName: courses[index]['batchName'],
-            batchYear: courses[index]['batchYear'],
-            index: index,
-          );
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : courses.isEmpty
+              ? const Center(child: Text('No courses added yet'))
+              : ListView.builder(
+                  itemCount: courses.length,
+                  padding: const EdgeInsets.all(16),
+                  itemBuilder: (context, index) {
+                    final course = courses[index];
+                    return _buildCourseTile(
+                      context: context,
+                      icon: course['icon'],
+                      title: course['title'],
+                      batchName: course['batchName'],
+                      batchYear: course['batchYear'],
+                      index: index,
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => CourseModal(
-              onSave: (title, batchName, batchYear, iconData) async {
-                final firestoreService = FirestoreService();
-                try {
-                  await firestoreService.addBatch(batchName, batchYear, iconData, title);
-                  if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Course added successfully')),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error adding course'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
-          );
-        },
+        onPressed: _addCourse,
         child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // Currently selected index
-        onTap: (index) {}, // No action needed for now
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group),
-            label: 'Courses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Attendance',
-          ),
-        ],
       ),
     );
   }
@@ -131,8 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
     required String batchYear,
     required int index,
   }) {
+    final key = Key(courses[index]['batchId'] ?? title); // Use batchId as key if available
+    
     return Dismissible(
-      key: Key(title),
+      key: key,
       confirmDismiss: (direction) async {
         return await showDialog(
           context: context,
@@ -154,7 +152,37 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         );
       },
-      onDismissed: (direction) => onDismissed(index),
+      onDismissed: (direction) {
+        // Store the course data before removing it
+        final deletedCourse = courses[index];
+        
+        // Remove from local state immediately
+        setState(() {
+          courses.removeAt(index);
+        });
+
+        // Delete from Firebase
+        _firestoreService.deleteBatch(deletedCourse['batchId']).then((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Course deleted successfully')),
+            );
+          }
+        }).catchError((error) {
+          if (mounted) {
+            setState(() {
+              courses.insert(index, deletedCourse);
+            });
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error deleting course: $error'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        });
+      },
       background: Container(
         color: Colors.red,
         child: const Align(
@@ -313,11 +341,5 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
-  }
-
-  void onDismissed(int index) {
-    setState(() {
-      courses.removeAt(index);
-    });
   }
 }
