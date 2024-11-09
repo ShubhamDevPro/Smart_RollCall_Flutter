@@ -52,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _addCourse() async {
-    final result = await showModalBottomSheet<bool>(
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -61,17 +61,20 @@ class _MyHomePageState extends State<MyHomePage> {
           try {
             setState(() => _isLoading = true);
             await _firestoreService.addBatch(batchName, batchYear, iconData, title);
-            return true;
+            
+            if (!mounted) return;
+            Navigator.pop(context); // This will dismiss the modal
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Course created successfully')),
+            );
           } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error adding course: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-            return false;
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error creating course: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
           } finally {
             if (mounted) {
               setState(() => _isLoading = false);
@@ -80,12 +83,6 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
     );
-
-    if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Course added successfully')),
-      );
-    }
   }
 
   @override
