@@ -3,7 +3,6 @@ import 'package:smart_roll_call_flutter/models/student.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 import 'package:smart_roll_call_flutter/widgets/AddStudentModal.dart';
 
-/// Screen widget for managing daily attendance
 class AttendanceScreen extends StatefulWidget {
   final String batchId;
 
@@ -16,12 +15,10 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   List<Student> students = [];
-  int presentCount = 0;
 
   @override
   void initState() {
     super.initState();
-    // Listen to real-time updates of student data from Firestore
     _firestoreService.getStudents(widget.batchId).listen((snapshot) {
       setState(() {
         students = snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
@@ -29,35 +26,31 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     });
   }
 
-  /// Saves attendance status for all students to Firestore
   void _saveAttendance() {
     for (var student in students) {
-      _firestoreService.updateStudentAttendance(
-        widget.batchId, 
-        student.enrollNumber, 
-        student.isPresent
-      );
+      _firestoreService.updateStudentAttendance(widget.batchId, student.enrollNumber, student.isPresent);
     }
-    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Attendance saved successfully!')),
+      const SnackBar(
+        content: Text('Attendance saved successfully!'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
-  /// Returns formatted current date string (DD/MM/YYYY)
+  int presentCount = 0;
+
   String _getCurrentDate() {
     final now = DateTime.now();
     return '${now.day}/${now.month}/${now.year}';
   }
 
-  /// Updates the count of present students when attendance is modified
   void _updateAttendance(bool isChecked) {
     setState(() {
       presentCount = students.where((student) => student.isPresent).length;
     });
   }
 
-  /// Resets attendance status for all students to absent
   void _clearSelection() {
     setState(() {
       for (var student in students) {
@@ -73,68 +66,107 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Take Attendance'),
+        title: const Text('Take Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
+        elevation: 0,
         actions: [
-          // Reset button to clear all attendance
           IconButton(
             onPressed: _clearSelection,
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Reset Attendance',
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // Header section with attendance statistics
           Container(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withOpacity(0.8)
-                ],
+                colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.8)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
             ),
             child: Column(
               children: [
-                // Date display
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Today\'s Attendance'),
-                    Text('(${_getCurrentDate()})'),
+                    Text(
+                      'Today\'s Attendance',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '(${_getCurrentDate()})',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
-                // Statistics cards
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatCard('Total', '${students.length}', Icons.groups_rounded),
-                    _buildStatCard('Present', '$presentCount', Icons.check_circle_rounded),
-                    _buildStatCard('Absent', '$absentCount', Icons.cancel_rounded),
+                    _buildStatCard(
+                      'Total',
+                      '${students.length}',
+                      Icons.groups_rounded,
+                      Theme.of(context).primaryColor.withBlue(255),
+                    ),
+                    _buildStatCard(
+                      'Present',
+                      '$presentCount',
+                      Icons.check_circle_rounded,
+                      Colors.green,
+                    ),
+                    _buildStatCard(
+                      'Absent',
+                      '$absentCount',
+                      Icons.cancel_rounded,
+                      Colors.red,
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-
-          // Students list header with count
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Students List'),
-                Chip(label: Text('${presentCount}/${students.length}')),
+                Text(
+                  'Students List',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                Chip(
+                  label: Text(
+                    '${presentCount}/${students.length}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Theme.of(context).primaryColor,
+                ),
               ],
             ),
           ),
-
-          // Scrollable list of student cards
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: students.length,
               itemBuilder: (context, index) {
                 return StudentCard(
@@ -144,24 +176,41 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               },
             ),
           ),
-
-          // Save attendance button
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 onPressed: presentCount > 0 ? _saveAttendance : null,
-                child: const Text('Save Attendance'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child:const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.save_rounded),
+                    SizedBox(width: 8),
+                    Text(
+                      'Save Attendance',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
-      // FAB to add new students
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showModalBottomSheet(
             context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
             builder: (context) => AddStudentModal(batchId: widget.batchId),
           );
         },
@@ -170,17 +219,38 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
-  /// Builds a statistics card with title, value, and icon
-  Widget _buildStatCard(String title, String value, IconData icon) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           children: [
-            Icon(icon),
-            Text(value),
-            Text(title),
+            Icon(
+              icon,
+              size: 32,
+              color: color,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
           ],
         ),
       ),
@@ -188,7 +258,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 }
 
-/// Widget for displaying individual student attendance cards
 class StudentCard extends StatefulWidget {
   final Student student;
   final ValueChanged<bool> onChanged;
@@ -203,22 +272,45 @@ class _StudentCardState extends State<StudentCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: ListTile(
-        // Student avatar with first letter of name
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          child: Text(widget.student.name[0]),
+          backgroundColor: widget.student.isPresent 
+              ? Colors.green.withOpacity(0.1)
+              : Colors.grey.withOpacity(0.1),
+          child: Text(
+            widget.student.name[0],
+            style: TextStyle(
+              color: widget.student.isPresent ? Colors.green : Colors.grey[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-        title: Text(widget.student.name),
+        title: Text(
+          widget.student.name,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
         subtitle: Text('Enrollment No: ${widget.student.enrollNumber}'),
-        // Attendance checkbox
-        trailing: Checkbox(
-          value: widget.student.isPresent,
-          onChanged: (bool? value) {
-            setState(() {
-              widget.student.isPresent = value ?? false;
-            });
-            widget.onChanged(widget.student.isPresent);
-          },
+        trailing: Transform.scale(
+          scale: 1.2,
+          child: Checkbox(
+            value: widget.student.isPresent,
+            activeColor: Colors.green,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+            onChanged: (bool? value) {
+              setState(() {
+                widget.student.isPresent = value ?? false;
+              });
+              widget.onChanged(widget.student.isPresent);
+            },
+          ),
         ),
       ),
     );

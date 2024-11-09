@@ -114,8 +114,8 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Course'),
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
               onTap: () => Navigator.pop(context),
             ),
             // Add more drawer items as needed
@@ -124,8 +124,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Courses'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Attendance'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
         onTap: (index) {

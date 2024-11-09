@@ -171,8 +171,13 @@ class _CourseModalState extends State<CourseModal> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Course Type'),
-        content: Column(
-          children: courseTypes.map((type) => _buildCourseTypeOption(type)).toList(),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: SizedBox(
+          height: 100,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: courseTypes.map((type) => _buildCourseTypeOption(type)).toList(),
+          ),
         ),
         actions: [
           TextButton(
@@ -197,12 +202,17 @@ class _CourseModalState extends State<CourseModal> {
   Widget _buildCourseTypeOption(String type) {
     final isSelected = selectedCourseType == type;
     return ListTile(
+      leading: Icon(
+        type == 'Practical' ? Icons.build : Icons.book,
+        color: isSelected ? Theme.of(context).primaryColor : null,
+      ),
       title: Text(
         type,
         style: TextStyle(
           color: isSelected ? Theme.of(context).primaryColor : null,
         ),
       ),
+      dense: true, // Makes the ListTile more compact
       onTap: () {
         setState(() => selectedCourseType = type);
         Navigator.pop(context);
