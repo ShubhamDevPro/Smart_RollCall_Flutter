@@ -33,13 +33,15 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() => _isLoading = true); // Set loading state to true
     _firestoreService.getBatches().listen(
       (snapshot) {
-        if (mounted) { // Check if the widget is still mounted
+        if (mounted) {
+          // Check if the widget is still mounted
           setState(() {
             // Map Firestore documents to a list of course data
             courses = snapshot.docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               return {
-                'icon': IconData(data['icon'] ?? Icons.book.codePoint, fontFamily: 'MaterialIcons'),
+                'icon': IconData(data['icon'] ?? Icons.book.codePoint,
+                    fontFamily: 'MaterialIcons'),
                 'title': data['title'] ?? 'Untitled',
                 'batchName': data['batchName'] ?? '',
                 'batchYear': data['batchYear'] ?? '',
@@ -71,8 +73,9 @@ class _MyHomePageState extends State<MyHomePage> {
         onSave: (title, batchName, batchYear, iconData) async {
           try {
             setState(() => _isLoading = true); // Set loading state to true
-            await _firestoreService.addBatch(batchName, batchYear, iconData, title);
-            
+            await _firestoreService.addBatch(
+                batchName, batchYear, iconData, title);
+
             if (!mounted) return;
             Navigator.pop(context); // Dismiss the modal
             ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(color: Colors.blue),
-              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+              child: Text('Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
               leading: const Icon(Icons.home),
@@ -133,17 +137,22 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Courses'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Attendance'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today), label: 'Attendance'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: 'Settings'),
         ],
         onTap: (index) {
           // Handle navigation based on the selected index
         },
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator()) // Show loading indicator
+          ? const Center(
+              child: CircularProgressIndicator()) // Show loading indicator
           : courses.isEmpty
-              ? const Center(child: Text('No courses added yet')) // Show message if no courses
+              ? const Center(
+                  child: Text(
+                      'No courses added yet')) // Show message if no courses
               : ListView.builder(
                   itemCount: courses.length,
                   padding: const EdgeInsets.all(16),
@@ -175,8 +184,9 @@ class _MyHomePageState extends State<MyHomePage> {
     required String batchYear,
     required int index,
   }) {
-    final key = Key(courses[index]['batchId'] ?? title); // Use batchId as key if available
-    
+    final key = Key(
+        courses[index]['batchId'] ?? title); // Use batchId as key if available
+
     return Dismissible(
       key: key,
       confirmDismiss: (direction) async {
@@ -186,15 +196,19 @@ class _MyHomePageState extends State<MyHomePage> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Delete Course'),
-              content: const Text('This course will be permanently deleted. This action cannot be undone.'),
+              content: const Text(
+                  'This course will be permanently deleted. This action cannot be undone.'),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(false), // Cancel deletion
+                  onPressed: () =>
+                      Navigator.of(context).pop(false), // Cancel deletion
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(true), // Confirm deletion
-                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                  onPressed: () =>
+                      Navigator.of(context).pop(true), // Confirm deletion
+                  child:
+                      const Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
               ],
             );
@@ -208,7 +222,7 @@ class _MyHomePageState extends State<MyHomePage> {
         try {
           // Delete from Firebase first
           await _firestoreService.deleteBatch(deletedCourse['batchId']);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Course deleted successfully')),
@@ -239,8 +253,10 @@ class _MyHomePageState extends State<MyHomePage> {
         leading: Icon(icon, color: Colors.blue),
         title: Text(title),
         subtitle: Text('$batchName $batchYear'),
-        onTap: () => _showCourseOptions(context, title, index), // Show course options
-        onLongPress: () => _showEditCourseModal(context, courses[index], index), // Show edit modal
+        onTap: () =>
+            _showCourseOptions(context, title, index), // Show course options
+        onLongPress: () => _showEditCourseModal(
+            context, courses[index], index), // Show edit modal
         trailing: IconButton(
           icon: const Icon(
             Icons.edit,
@@ -339,7 +355,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AttendanceHistoryScreen(),
+                            builder: (context) =>
+                                const AttendanceHistoryScreen(),
                           ),
                         );
                       },
@@ -373,7 +390,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // Method to show edit course modal
-  void _showEditCourseModal(BuildContext context, Map<String, dynamic> course, int index) {
+  void _showEditCourseModal(
+      BuildContext context, Map<String, dynamic> course, int index) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -384,7 +402,8 @@ class _MyHomePageState extends State<MyHomePage> {
         initialIcon: course['icon'],
         onSave: (title, batchName, batchYear, iconData) async {
           print('Attempting to update course with ID: ${course['batchId']}');
-          print('Title: $title, BatchName: $batchName, BatchYear: $batchYear, Icon: ${iconData.codePoint}');
+          print(
+              'Title: $title, BatchName: $batchName, BatchYear: $batchYear, Icon: ${iconData.codePoint}');
           try {
             await _firestoreService.updateBatch(
               course['batchId'],
@@ -459,11 +478,21 @@ class CourseSearchDelegate extends SearchDelegate {
 
   // Method to build search results
   Widget buildSearchResults() {
-    final results = courses.where((course) =>
-        course['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
-        course['batchName'].toString().toLowerCase().contains(query.toLowerCase()) ||
-        course['batchYear'].toString().toLowerCase().contains(query.toLowerCase())
-    ).toList();
+    final results = courses
+        .where((course) =>
+            course['title']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            course['batchName']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            course['batchYear']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
+        .toList();
 
     return ListView.builder(
       itemCount: results.length,

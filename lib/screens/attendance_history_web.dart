@@ -1,5 +1,4 @@
 import 'dart:html' as html;
-import 'package:excel/excel.dart';
 
 Future<void> downloadExcelFile(List<int> excelBytes, String fileName) async {
   final blob = html.Blob([excelBytes]);
@@ -8,4 +7,4 @@ Future<void> downloadExcelFile(List<int> excelBytes, String fileName) async {
     ..setAttribute("download", fileName)
     ..click();
   html.Url.revokeObjectUrl(url);
-} 
+}

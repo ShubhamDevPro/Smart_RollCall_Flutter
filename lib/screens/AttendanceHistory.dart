@@ -1,31 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:html' as html;
 import 'package:excel/excel.dart';
-
-// Conditional import for web
-export 'attendance_history_web.dart' if (dart.library.io) 'attendance_history_mobile.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:universal_html/html.dart' as html;
 
 /// Screen widget to display and manage attendance history
 class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key});
 
   @override
-  State<AttendanceHistoryScreen> createState() => _AttendanceHistoryScreenState();
+  State<AttendanceHistoryScreen> createState() =>
+      _AttendanceHistoryScreenState();
 }
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+
   DateTime selectedDate = DateTime.now();
   List<Map<String, dynamic>> attendanceData = [];
   List<Map<String, dynamic>> filteredAttendanceData = [];
   bool isLoading = false;
-  
+
   // Add text controller for search
   final TextEditingController _searchController = TextEditingController();
 
@@ -51,8 +50,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           final nameLower = student['name'].toString().toLowerCase();
           final enrollLower = student['enrollNumber'].toString().toLowerCase();
           final searchLower = query.toLowerCase();
-          return nameLower.contains(searchLower) || 
-                 enrollLower.contains(searchLower);
+          return nameLower.contains(searchLower) ||
+              enrollLower.contains(searchLower);
         }).toList();
       }
     });
@@ -64,7 +63,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
 
     try {
-      final data = await _firestoreService.getAttendanceForDateAll(selectedDate);
+      final data =
+          await _firestoreService.getAttendanceForDateAll(selectedDate);
       setState(() {
         attendanceData = data;
         filteredAttendanceData = data; // Update filtered data too
@@ -90,7 +90,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     try {
       // Toggle the attendance status
       final newStatus = !student['isPresent'];
-      
+
       await _firestoreService.updateAttendanceStatus(
         student['batchId'],
         student['enrollNumber'],
@@ -132,7 +132,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     try {
       final data = await _firestoreService.getAllAttendanceData();
       final List<String> dates = data['dates'];
-      final Map<String, Map<String, bool>> studentAttendance = data['studentAttendance'];
+      final Map<String, Map<String, bool>> studentAttendance =
+          data['studentAttendance'];
       final Map<String, Map<String, String>> studentInfo = data['studentInfo'];
 
       final excel = Excel.createExcel();
@@ -156,17 +157,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       // Add date headers
       for (int i = 0; i < dates.length; i++) {
         final DateTime dateTime = DateTime.parse(dates[i]);
-        final String formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+        final String formattedDate =
+            '${dateTime.day}/${dateTime.month}/${dateTime.year}';
         sheet.cell(CellIndex.indexByColumnRow(columnIndex: i + 2, rowIndex: 0))
           ..value = formattedDate
           ..cellStyle = headerStyle;
       }
 
       // Add statistics headers
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: dates.length + 2, rowIndex: 0))
+      sheet.cell(CellIndex.indexByColumnRow(
+          columnIndex: dates.length + 2, rowIndex: 0))
         ..value = 'Total Classes Attended'
         ..cellStyle = headerStyle;
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: dates.length + 3, rowIndex: 0))
+      sheet.cell(CellIndex.indexByColumnRow(
+          columnIndex: dates.length + 3, rowIndex: 0))
         ..value = 'Attendance Percentage'
         ..cellStyle = headerStyle;
 
@@ -174,10 +178,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       int rowIndex = 1;
       studentInfo.forEach((enrollNumber, info) {
         // Add student name and enrollment number
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-          .value = info['name'];
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex))
-          .value = enrollNumber;
+        sheet
+            .cell(
+                CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
+            .value = info['name'];
+        sheet
+            .cell(
+                CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex))
+            .value = enrollNumber;
 
         // Calculate attendance statistics
         int totalClasses = 0;
@@ -190,19 +198,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             columnIndex: i + 2,
             rowIndex: rowIndex,
           ));
-          
-          cell.value = attendance == null ? 'N/A' : (attendance ? 'Present' : 'Absent');
-          
+
+          cell.value =
+              attendance == null ? 'N/A' : (attendance ? 'Present' : 'Absent');
+
           // Update statistics
           if (attendance != null) {
             totalClasses++;
             if (attendance) classesAttended++;
           }
-          
+
           // Style for attendance cells
           cell.cellStyle = CellStyle(
             horizontalAlign: HorizontalAlign.Center,
-            backgroundColorHex: attendance == null 
+            backgroundColorHex: attendance == null
                 ? '#FFFFFF'
                 : (attendance ? '#E6FFE6' : '#FFE6E6'),
           );
@@ -223,16 +232,17 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           columnIndex: dates.length + 3,
           rowIndex: rowIndex,
         ));
-        final percentage = totalClasses > 0 
+        final percentage = totalClasses > 0
             ? (classesAttended / totalClasses * 100).toStringAsFixed(1) + '%'
             : '0.0%';
         percentageCell.value = percentage;
         percentageCell.cellStyle = CellStyle(
           horizontalAlign: HorizontalAlign.Center,
           bold: true,
-          backgroundColorHex: totalClasses > 0 && (classesAttended / totalClasses) >= 0.75 
-              ? '#E6FFE6' 
-              : '#FFE6E6',
+          backgroundColorHex:
+              totalClasses > 0 && (classesAttended / totalClasses) >= 0.75
+                  ? '#E6FFE6'
+                  : '#FFE6E6',
         );
 
         rowIndex++;
@@ -249,16 +259,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
       // Generate Excel file bytes
       final List<int>? excelBytes = excel.encode();
-      
+
       if (excelBytes == null) throw 'Failed to generate Excel file';
 
       if (kIsWeb) {
-        await downloadExcelFile(
-          excelBytes, 
-          "attendance_${DateTime.now().millisecondsSinceEpoch}.xlsx"
-        );
+        await downloadExcel(excelBytes);
       } else {
-        throw UnsupportedError('Downloading Excel files is only supported on web platform');
+        throw UnsupportedError(
+            'Downloading Excel files is only supported on web platform');
       }
 
       if (!mounted) return;
@@ -283,14 +291,27 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
-  Future<void> downloadExcelFile(List<int> bytes, String fileName) {
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute("download", fileName)
-      ..click();
-    html.Url.revokeObjectUrl(url);
-    return Future.value();
+  Future<void> downloadExcel(List<int> bytes) async {
+    try {
+      if (kIsWeb) {
+        // Web implementation using universal_html
+        final blob = html.Blob([bytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute("download", "attendance_report.xlsx")
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        // Mobile implementation
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/attendance_report.xlsx');
+        await file.writeAsBytes(bytes);
+        await Share.shareXFiles([XFile(file.path)], text: 'Attendance Report');
+      }
+    } catch (e) {
+      print('Error downloading file: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -301,7 +322,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         actions: [
           // Add export button in AppBar
           IconButton(
-            icon: isLoading 
+            icon: isLoading
                 ? const SizedBox(
                     width: 20,
                     height: 20,
@@ -336,7 +357,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () {
                         setState(() {
-                          selectedDate = selectedDate.subtract(const Duration(days: 1));
+                          selectedDate =
+                              selectedDate.subtract(const Duration(days: 1));
                           _loadAttendanceData();
                         });
                       },
@@ -363,12 +385,15 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
-                      onPressed: selectedDate.isBefore(DateTime.now()) ? () {
-                        setState(() {
-                          selectedDate = selectedDate.add(const Duration(days: 1));
-                          _loadAttendanceData();
-                        });
-                      } : null,
+                      onPressed: selectedDate.isBefore(DateTime.now())
+                          ? () {
+                              setState(() {
+                                selectedDate =
+                                    selectedDate.add(const Duration(days: 1));
+                                _loadAttendanceData();
+                              });
+                            }
+                          : null,
                     ),
                   ],
                 ),
@@ -417,13 +442,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                 ),
                 _buildSummaryCard(
                   'Present',
-                  filteredAttendanceData.where((s) => s['isPresent']).length.toString(),
+                  filteredAttendanceData
+                      .where((s) => s['isPresent'])
+                      .length
+                      .toString(),
                   Icons.check_circle,
                   Colors.green,
                 ),
                 _buildSummaryCard(
                   'Absent',
-                  filteredAttendanceData.where((s) => !s['isPresent']).length.toString(),
+                  filteredAttendanceData
+                      .where((s) => !s['isPresent'])
+                      .length
+                      .toString(),
                   Icons.cancel,
                   Colors.red,
                 ),
@@ -453,7 +484,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             name: student['name'],
                             enrollNumber: student['enrollNumber'],
                             isPresent: student['isPresent'],
-                            onStatusChanged: () => _updateAttendanceStatus(student),
+                            onStatusChanged: () =>
+                                _updateAttendanceStatus(student),
                             totalDays: student['totalDays'] ?? 0,
                             presentDays: student['presentDays'] ?? 0,
                           );
@@ -465,7 +497,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String title, String count, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+      String title, String count, IconData icon, Color color) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -518,8 +551,8 @@ class AttendanceHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final attendancePercentage = totalDays > 0 
-        ? (presentDays / totalDays * 100).toStringAsFixed(1) 
+    final attendancePercentage = totalDays > 0
+        ? (presentDays / totalDays * 100).toStringAsFixed(1)
         : '0.0';
 
     return Card(
@@ -552,8 +585,8 @@ class AttendanceHistoryCard extends StatelessWidget {
                     '$attendancePercentage%',
                     style: TextStyle(
                       fontSize: 12,
-                      color: double.parse(attendancePercentage) >= 75 
-                          ? Colors.green 
+                      color: double.parse(attendancePercentage) >= 75
+                          ? Colors.green
                           : Colors.red,
                     ),
                   ),
@@ -562,7 +595,7 @@ class AttendanceHistoryCard extends StatelessWidget {
               const SizedBox(width: 8),
               // Present/Absent Icon
               CircleAvatar(
-                backgroundColor: isPresent 
+                backgroundColor: isPresent
                     ? Colors.green.withOpacity(0.1)
                     : Colors.red.withOpacity(0.1),
                 child: Icon(
@@ -581,9 +614,12 @@ class AttendanceHistoryCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isPresent ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  color: isPresent
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -605,4 +641,4 @@ class AttendanceHistoryCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

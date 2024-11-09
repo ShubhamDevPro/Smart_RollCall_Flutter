@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String userId = 'public_user';
@@ -17,9 +16,14 @@ class FirestoreService {
   }
 
   // Add new batch
-  Future<DocumentReference> addBatch(String name, String year, IconData icon, String title) async {
+  Future<DocumentReference> addBatch(
+      String name, String year, IconData icon, String title) async {
     try {
-      return await _firestore.collection('users').doc(userId).collection('batches').add({
+      return await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .add({
         'batchName': name,
         'batchYear': year,
         'icon': icon.codePoint,
@@ -44,7 +48,8 @@ class FirestoreService {
   }
 
   // Add student to batch
-  Future<void> addStudent(String batchId, Map<String, dynamic> studentData) async {
+  Future<void> addStudent(
+      String batchId, Map<String, dynamic> studentData) async {
     await _firestore
         .collection('users')
         .doc(userId)
@@ -55,7 +60,8 @@ class FirestoreService {
   }
 
   // Update student attendance
-  Future<void> updateStudentAttendance(String batchId, String studentId, bool isPresent) {
+  Future<void> updateStudentAttendance(
+      String batchId, String studentId, bool isPresent) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -88,7 +94,8 @@ class FirestoreService {
   }
 
   // Add this new method to FirestoreService class
-  Future<void> updateBatch(String batchId, String title, String batchName, String batchYear, int iconCodePoint) async {
+  Future<void> updateBatch(String batchId, String title, String batchName,
+      String batchYear, int iconCodePoint) async {
     try {
       print('Updating batch with ID: $batchId');
       await _firestore
@@ -110,13 +117,15 @@ class FirestoreService {
   }
 
   // Add new method to save attendance for a specific date
-  Future<void> saveAttendanceForDate(String batchId, DateTime date, List<Map<String, dynamic>> attendanceData) async {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    
+  Future<void> saveAttendanceForDate(String batchId, DateTime date,
+      List<Map<String, dynamic>> attendanceData) async {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
     try {
       // Create a batch write to handle multiple operations
       WriteBatch batch = _firestore.batch();
-      
+
       // First, get all students in the batch
       final studentsSnapshot = await _firestore
           .collection('users')
@@ -127,26 +136,23 @@ class FirestoreService {
           .get();
 
       // Create a map of enrollment numbers to student documents for quick lookup
-      final studentDocs = Map.fromEntries(
-        studentsSnapshot.docs.map((doc) => MapEntry(
-          doc.data()['enrollNumber'] as String,
-          doc
-        ))
-      );
-      
+      final studentDocs = Map.fromEntries(studentsSnapshot.docs
+          .map((doc) => MapEntry(doc.data()['enrollNumber'] as String, doc)));
+
       // For each student's attendance
       for (var studentData in attendanceData) {
         final studentDoc = studentDocs[studentData['enrollNumber']];
         if (studentDoc != null) {
           // Add attendance record to student's attendance subcollection
-          final attendanceRef = studentDoc.reference.collection('attendance').doc(dateStr);
+          final attendanceRef =
+              studentDoc.reference.collection('attendance').doc(dateStr);
           batch.set(attendanceRef, {
             'date': Timestamp.fromDate(date),
             'isPresent': studentData['isPresent'],
           });
         }
       }
-      
+
       // Commit the batch
       await batch.commit();
     } catch (e) {
@@ -156,9 +162,11 @@ class FirestoreService {
   }
 
   // Add method to get attendance for a specific date
-  Stream<QuerySnapshot> getAttendanceForDate(String batchId, String studentId, DateTime date) {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    
+  Stream<QuerySnapshot> getAttendanceForDate(
+      String batchId, String studentId, DateTime date) {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
     return _firestore
         .collection('users')
         .doc(userId)
@@ -172,8 +180,10 @@ class FirestoreService {
   }
 
   // Add this new method to get attendance for all students on a specific date
-  Future<List<Map<String, dynamic>>> getAttendanceForDateAll(DateTime date) async {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  Future<List<Map<String, dynamic>>> getAttendanceForDateAll(
+      DateTime date) async {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     List<Map<String, dynamic>> attendanceList = [];
 
     try {
@@ -184,15 +194,13 @@ class FirestoreService {
           .get();
 
       for (var batch in batchesSnapshot.docs) {
-        final studentsSnapshot = await batch.reference
-            .collection('students')
-            .get();
+        final studentsSnapshot =
+            await batch.reference.collection('students').get();
 
         for (var student in studentsSnapshot.docs) {
           // Get all attendance records for this student
-          final allAttendanceSnapshot = await student.reference
-              .collection('attendance')
-              .get();
+          final allAttendanceSnapshot =
+              await student.reference.collection('attendance').get();
 
           // Calculate attendance statistics
           int totalDays = allAttendanceSnapshot.docs.length;
@@ -233,8 +241,9 @@ class FirestoreService {
     DateTime date,
     bool newStatus,
   ) async {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
     try {
       // First, find the student document
       final studentsSnapshot = await _firestore
@@ -256,7 +265,6 @@ class FirestoreService {
           .collection('attendance')
           .doc(dateStr)
           .update({'isPresent': newStatus});
-        
     } catch (e) {
       print('Error updating attendance status: $e');
       rethrow;
@@ -280,14 +288,13 @@ class FirestoreService {
       // For each batch
       for (var batch in batchesSnapshot.docs) {
         // Get all students in the batch
-        final studentsSnapshot = await batch.reference
-            .collection('students')
-            .get();
+        final studentsSnapshot =
+            await batch.reference.collection('students').get();
 
         // For each student
         for (var student in studentsSnapshot.docs) {
           final enrollNumber = student.data()['enrollNumber'] as String;
-          
+
           // Store student info
           studentInfo[enrollNumber] = {
             'name': student.data()['name'] as String,
@@ -295,14 +302,14 @@ class FirestoreService {
           };
 
           // Get all attendance records for this student
-          final attendanceSnapshot = await student.reference
-              .collection('attendance')
-              .get();
+          final attendanceSnapshot =
+              await student.reference.collection('attendance').get();
 
           // Store attendance data and collect dates
           Map<String, bool> dates = {};
           for (var attendance in attendanceSnapshot.docs) {
-            final date = attendance.id; // Using the document ID which is the date string
+            final date =
+                attendance.id; // Using the document ID which is the date string
             dates[date] = attendance.data()['isPresent'] as bool;
             allDates.add(date);
           }
