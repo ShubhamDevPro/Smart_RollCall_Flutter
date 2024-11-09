@@ -10,11 +10,12 @@ import 'package:universal_html/html.dart' as html;
 
 /// Screen widget to display and manage attendance history
 class AttendanceHistoryScreen extends StatefulWidget {
-  const AttendanceHistoryScreen({super.key});
+  final String? batchId;
+
+  const AttendanceHistoryScreen({Key? key, this.batchId}) : super(key: key);
 
   @override
-  State<AttendanceHistoryScreen> createState() =>
-      _AttendanceHistoryScreenState();
+  _AttendanceHistoryScreenState createState() => _AttendanceHistoryScreenState();
 }
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
@@ -63,8 +64,10 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
 
     try {
-      final data =
-          await _firestoreService.getAttendanceForDateAll(selectedDate);
+      final data = await _firestoreService.getAttendanceForDateAll(
+        selectedDate,
+        widget.batchId,
+      );
       setState(() {
         attendanceData = data;
         filteredAttendanceData = data; // Update filtered data too

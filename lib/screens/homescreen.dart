@@ -356,7 +356,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const AttendanceHistoryScreen(),
+                                AttendanceHistoryScreen(
+                                  batchId: courses[index]['batchId'],
+                                ),
                           ),
                         );
                       },

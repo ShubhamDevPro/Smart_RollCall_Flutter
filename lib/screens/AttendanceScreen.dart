@@ -69,15 +69,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         const SnackBar(
           content: Text('Attendance saved successfully!'),
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2), // Reduced duration for smoother transition
+          duration: Duration(seconds: 2),
         ),
       );
 
-      // Navigate to AttendanceHistory screen
+      // Navigate to AttendanceHistory screen with the batchId
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const AttendanceHistoryScreen(),
+          builder: (context) => AttendanceHistoryScreen(
+            batchId: widget.batchId,
+          ),
         ),
       );
     } catch (e) {

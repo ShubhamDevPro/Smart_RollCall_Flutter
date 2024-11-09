@@ -181,17 +181,25 @@ class FirestoreService {
 
   // Add this new method to get attendance for all students on a specific date
   Future<List<Map<String, dynamic>>> getAttendanceForDateAll(
-      DateTime date) async {
+      DateTime date, [String? selectedBatchId]) async {
     final dateStr =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     List<Map<String, dynamic>> attendanceList = [];
 
     try {
-      final batchesSnapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('batches')
-          .get();
+      // If selectedBatchId is provided, get only that batch, otherwise get all batches
+      final Query batchQuery = selectedBatchId != null
+          ? _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('batches')
+              .where(FieldPath.documentId, isEqualTo: selectedBatchId)
+          : _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('batches');
+
+      final batchesSnapshot = await batchQuery.get();
 
       for (var batch in batchesSnapshot.docs) {
         final studentsSnapshot =
