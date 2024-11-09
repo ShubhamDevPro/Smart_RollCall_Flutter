@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/student.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
+import 'package:smart_roll_call_flutter/widgets/AddStudentModal.dart';
 
 class AttendanceScreen extends StatefulWidget {
   final String batchId;
@@ -20,14 +21,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     super.initState();
     _firestoreService.getStudents(widget.batchId).listen((snapshot) {
       setState(() {
-        students = snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
+        students =
+            snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
       });
     });
   }
 
   void _saveAttendance() {
     for (var student in students) {
-      _firestoreService.updateStudentAttendance(widget.batchId, student.enrollNumber, student.isPresent);
+      _firestoreService.updateStudentAttendance(
+          widget.batchId, student.enrollNumber, student.isPresent);
     }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -62,10 +65,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     final absentCount = students.length - presentCount;
-    
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Take Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text('Take Attendance',
+            style: TextStyle(fontWeight: FontWeight.w600)),
         elevation: 0,
         actions: [
           IconButton(
@@ -82,7 +86,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.8)],
+                colors: [
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).primaryColor.withOpacity(0.8)
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -186,14 +193,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child:const Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
                     Icon(Icons.save_rounded),
                     SizedBox(width: 8),
                     Text(
                       'Save Attendance',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -202,10 +210,24 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => AddStudentModal(batchId: widget.batchId),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -266,7 +288,7 @@ class _StudentCardState extends State<StudentCard> {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: widget.student.isPresent 
+          backgroundColor: widget.student.isPresent
               ? Colors.green.withOpacity(0.1)
               : Colors.grey.withOpacity(0.1),
           child: Text(
@@ -302,5 +324,3 @@ class _StudentCardState extends State<StudentCard> {
     );
   }
 }
-
-

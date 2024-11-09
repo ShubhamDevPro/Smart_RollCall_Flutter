@@ -18,7 +18,11 @@ class FirestoreService {
 
   // Add new batch
   Future<void> addBatch(String name, String year, IconData icon, String title) {
-    return _firestore.collection('users').doc(userId).collection('batches').add({
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('batches')
+        .add({
       'batchName': name,
       'batchYear': year,
       'icon': icon.codePoint,
@@ -39,22 +43,20 @@ class FirestoreService {
   }
 
   // Add student to batch
-  Future<void> addStudent(String batchId, Student student) {
-    return _firestore
+  Future<void> addStudent(
+      String batchId, Map<String, dynamic> studentData) async {
+    await _firestore
         .collection('users')
         .doc(userId)
         .collection('batches')
         .doc(batchId)
         .collection('students')
-        .add({
-      'name': student.name,
-      'enrollNumber': student.enrollNumber,
-      'isPresent': student.isPresent,
-    });
+        .add(studentData);
   }
 
   // Update student attendance
-  Future<void> updateStudentAttendance(String batchId, String studentId, bool isPresent) {
+  Future<void> updateStudentAttendance(
+      String batchId, String studentId, bool isPresent) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -85,4 +87,4 @@ class FirestoreService {
     // Delete the batch itself
     await batchRef.delete();
   }
-} 
+}

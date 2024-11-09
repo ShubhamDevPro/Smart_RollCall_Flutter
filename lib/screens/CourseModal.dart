@@ -29,7 +29,15 @@ class _CourseModalState extends State<CourseModal> {
       TextEditingController(text: widget.initialBatchName);
   late final batchYearController =
       TextEditingController(text: widget.initialBatchYear);
-  late IconData selectedIcon = widget.initialIcon ?? Icons.book;
+  late String selectedCourseType = _getCourseTypeFromIcon(widget.initialIcon);
+
+  String _getCourseTypeFromIcon(IconData? icon) {
+    return icon == Icons.build ? 'Practical' : 'Theory';
+  }
+
+  IconData _getIconFromCourseType(String type) {
+    return type == 'Practical' ? Icons.build : Icons.book;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +60,9 @@ class _CourseModalState extends State<CourseModal> {
             Row(
               children: [
                 Text(
-                  widget.initialTitle == null ? 'Add New Course' : 'Edit Course',
+                  widget.initialTitle == null
+                      ? 'Add New Course'
+                      : 'Edit Course',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const Spacer(),
@@ -63,18 +73,18 @@ class _CourseModalState extends State<CourseModal> {
               ],
             ),
             const SizedBox(height: 20),
-            // Icon selector
             Row(
               children: [
                 CircleAvatar(
                   radius: 25,
-                  child: Icon(selectedIcon, size: 30),
+                  child: Icon(_getIconFromCourseType(selectedCourseType),
+                      size: 30),
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
-                  onPressed: () => _showIconPicker(context),
+                  onPressed: () => _showCourseTypePicker(context),
                   icon: const Icon(Icons.edit),
-                  label: const Text('Change Icon'),
+                  label: const Text('Change Course Type'),
                 ),
               ],
             ),
@@ -115,43 +125,31 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
-  void _validateAndSave() {
-    // Validate all fields
-    final String title = titleController.text.trim();
-    final String batchName = batchNameController.text.trim();
-    final String batchYear = batchYearController.text.trim();
-
-    if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    widget.onSave(title, batchName, batchYear, selectedIcon);
-    if (!mounted) return;
-    Navigator.pop(context);
-  }
-
-  void _showIconPicker(BuildContext context) {
-    final List<IconData> icons = [
-      Icons.build, // wrench/tool icon
-      Icons.book, // book icon
-    ];
+  void _showCourseTypePicker(BuildContext context) {
+    final List<String> courseTypes = ['Theory', 'Practical'];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Icon'),
-        content: Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: icons.map((icon) => _buildIconOption(icon)).toList(),
+        title: const Text('Select Course Type'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: courseTypes
+              .map((type) => ListTile(
+                    leading: Icon(
+                      _getIconFromCourseType(type),
+                      color: selectedCourseType == type
+                          ? Theme.of(context).primaryColor
+                          : null,
+                    ),
+                    title: Text(type),
+                    selected: selectedCourseType == type,
+                    onTap: () {
+                      setState(() => selectedCourseType = type);
+                      Navigator.pop(context);
+                    },
+                  ))
+              .toList(),
         ),
         actions: [
           TextButton(
@@ -163,30 +161,30 @@ class _CourseModalState extends State<CourseModal> {
     );
   }
 
-  Widget _buildIconOption(IconData icon) {
-    final isSelected = selectedIcon == icon;
-    return InkWell(
-      onTap: () {
-        setState(() => selectedIcon = icon);
-        Navigator.pop(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
-              : null,
-          border: isSelected
-              ? Border.all(color: Theme.of(context).primaryColor)
-              : null,
-          borderRadius: BorderRadius.circular(8),
+  void _validateAndSave() {
+    final String title = titleController.text.trim();
+    final String batchName = batchNameController.text.trim();
+    final String batchYear = batchYearController.text.trim();
+
+    if (title.isEmpty || batchName.isEmpty || batchYear.isEmpty) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          behavior: SnackBarBehavior.floating,
         ),
-        child: Icon(
-          icon,
-          size: 30,
-          color: isSelected ? Theme.of(context).primaryColor : null,
-        ),
-      ),
+      );
+      return;
+    }
+
+    widget.onSave(
+      title,
+      batchName,
+      batchYear,
+      _getIconFromCourseType(selectedCourseType),
     );
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 }
