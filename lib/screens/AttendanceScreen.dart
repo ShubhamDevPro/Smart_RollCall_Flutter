@@ -179,25 +179,31 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: presentCount > 0 ? _saveAttendance : null,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child:const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.save_rounded),
-                    SizedBox(width: 8),
-                    Text(
-                      'Save Attendance',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  Spacer(),
+                  ElevatedButton(
+                    onPressed: presentCount > 0 ? _saveAttendance : null,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(150, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                  ],
-                ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.save_rounded),
+                        SizedBox(width: 8),
+                        Text(
+                          'Save Attendance',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Spacer(),
+                ],
               ),
             ),
           ),
@@ -223,7 +229,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

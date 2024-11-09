@@ -4,28 +4,38 @@ import 'package:smart_roll_call_flutter/screens/AttendanceHistory.dart';
 import 'package:smart_roll_call_flutter/screens/CourseModal.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 
+// Main widget for the home page
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+// State class for MyHomePage
 class _MyHomePageState extends State<MyHomePage> {
+  // List to store course data
   List<Map<String, dynamic>> courses = [];
+  // Instance of FirestoreService to interact with Firestore
   final FirestoreService _firestoreService = FirestoreService();
+  // Boolean to track loading state
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    // Load courses when the widget is initialized
     _loadCourses();
   }
 
+  // Method to load courses from Firestore
   void _loadCourses() {
-    setState(() => _isLoading = true);
+    setState(() => _isLoading = true); // Set loading state to true
     _firestoreService.getBatches().listen(
       (snapshot) {
-        if (mounted) {
+        if (mounted) { // Check if the widget is still mounted
           setState(() {
+            // Map Firestore documents to a list of course data
             courses = snapshot.docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               return {
@@ -36,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 'batchId': doc.id,
               };
             }).toList();
-            _isLoading = false;
+            _isLoading = false; // Set loading state to false
           });
         }
       },
@@ -44,13 +54,14 @@ class _MyHomePageState extends State<MyHomePage> {
         print('Error loading courses: $error');
         if (mounted) {
           setState(() {
-            _isLoading = false;
+            _isLoading = false; // Set loading state to false on error
           });
         }
       },
     );
   }
 
+  // Method to add a new course
   Future<void> _addCourse() async {
     showModalBottomSheet(
       context: context,
@@ -59,11 +70,11 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context) => CourseModal(
         onSave: (title, batchName, batchYear, iconData) async {
           try {
-            setState(() => _isLoading = true);
+            setState(() => _isLoading = true); // Set loading state to true
             await _firestoreService.addBatch(batchName, batchYear, iconData, title);
             
             if (!mounted) return;
-            Navigator.pop(context); // This will dismiss the modal
+            Navigator.pop(context); // Dismiss the modal
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Course created successfully')),
             );
@@ -77,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
             );
           } finally {
             if (mounted) {
-              setState(() => _isLoading = false);
+              setState(() => _isLoading = false); // Set loading state to false
             }
           }
         },
@@ -94,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search functionality
+              // Show search delegate for courses
               showSearch(
                 context: context,
                 delegate: CourseSearchDelegate(courses: courses),
@@ -113,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.pop(context), // Close the drawer
             ),
             // Add more drawer items as needed
           ],
@@ -126,13 +137,13 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
         onTap: (index) {
-          // Handle navigation
+          // Handle navigation based on the selected index
         },
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator()) // Show loading indicator
           : courses.isEmpty
-              ? const Center(child: Text('No courses added yet'))
+              ? const Center(child: Text('No courses added yet')) // Show message if no courses
               : ListView.builder(
                   itemCount: courses.length,
                   padding: const EdgeInsets.all(16),
@@ -149,12 +160,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addCourse,
+        onPressed: _addCourse, // Trigger add course method
         child: const Icon(Icons.add),
       ),
     );
   }
 
+  // Method to build a course tile widget
   Widget _buildCourseTile({
     required BuildContext context,
     required IconData icon,
@@ -168,6 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Dismissible(
       key: key,
       confirmDismiss: (direction) async {
+        // Show confirmation dialog before dismissing
         return await showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -176,11 +189,11 @@ class _MyHomePageState extends State<MyHomePage> {
               content: const Text('This course will be permanently deleted. This action cannot be undone.'),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
+                  onPressed: () => Navigator.of(context).pop(false), // Cancel deletion
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
+                  onPressed: () => Navigator.of(context).pop(true), // Confirm deletion
                   child: const Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
               ],
@@ -191,7 +204,6 @@ class _MyHomePageState extends State<MyHomePage> {
       onDismissed: (direction) async {
         // Store the course data before removing it
         final deletedCourse = courses[index];
-        final deletedIndex = index;
 
         try {
           // Delete from Firebase first
@@ -227,14 +239,15 @@ class _MyHomePageState extends State<MyHomePage> {
         leading: Icon(icon, color: Colors.blue),
         title: Text(title),
         subtitle: Text('$batchName $batchYear'),
-        onTap: () => _showCourseOptions(context, title, index),
+        onTap: () => _showCourseOptions(context, title, index), // Show course options
         onLongPress: () {
-          _showEditCourseModal(context, courses[index], index);
+          _showEditCourseModal(context, courses[index], index); // Show edit modal
         },
       ),
     );
   }
 
+  // Method to show course options dialog
   void _showCourseOptions(BuildContext context, String courseTitle, int index) {
     showDialog(
       context: context,
@@ -354,6 +367,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // Method to show edit course modal
   void _showEditCourseModal(BuildContext context, Map<String, dynamic> course, int index) {
     showModalBottomSheet(
       context: context,
@@ -404,6 +418,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+// Search delegate for searching courses
 class CourseSearchDelegate extends SearchDelegate {
   final List<Map<String, dynamic>> courses;
 
@@ -414,7 +429,7 @@ class CourseSearchDelegate extends SearchDelegate {
     return [
       IconButton(
         icon: const Icon(Icons.clear),
-        onPressed: () => query = '',
+        onPressed: () => query = '', // Clear the search query
       ),
     ];
   }
@@ -423,20 +438,21 @@ class CourseSearchDelegate extends SearchDelegate {
   Widget buildLeading(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.arrow_back),
-      onPressed: () => close(context, null),
+      onPressed: () => close(context, null), // Close the search
     );
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    return buildSearchResults();
+    return buildSearchResults(); // Build search results
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return buildSearchResults();
+    return buildSearchResults(); // Build search suggestions
   }
 
+  // Method to build search results
   Widget buildSearchResults() {
     final results = courses.where((course) =>
         course['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
@@ -453,7 +469,7 @@ class CourseSearchDelegate extends SearchDelegate {
           title: Text(course['title']),
           subtitle: Text('${course['batchName']} ${course['batchYear']}'),
           onTap: () {
-            close(context, course);
+            close(context, course); // Close search with selected course
           },
         );
       },

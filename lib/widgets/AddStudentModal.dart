@@ -5,13 +5,13 @@ import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 class AddStudentModal extends StatefulWidget {
   final String batchId;
 
-  const AddStudentModal({Key? key, required this.batchId}) : super(key: key);
+  const AddStudentModal({super.key, required this.batchId});
 
   @override
-  _AddStudentModalState createState() => _AddStudentModalState();
+  AddStudentModalState createState() => AddStudentModalState();
 }
 
-class _AddStudentModalState extends State<AddStudentModal> {
+class AddStudentModalState extends State<AddStudentModal> {
   // Form key for validation and form control
   final _formKey = GlobalKey<FormState>();
   
