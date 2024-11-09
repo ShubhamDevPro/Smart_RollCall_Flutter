@@ -3,15 +3,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Represents a student entity with their attendance status
 class Student {
   // Basic student information
+  final String id;
   final String name;
   final String enrollNumber;
   bool isPresent;
 
   /// Constructor to create a new Student instance
+  /// [id] - Unique identifier for the student
   /// [name] - Student's full name
   /// [enrollNumber] - Unique enrollment identifier
   /// [isPresent] - Attendance status, defaults to false
   Student({
+    required this.id,
     required this.name,
     required this.enrollNumber,
     this.isPresent = false,
@@ -22,6 +25,7 @@ class Student {
   factory Student.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map;
     return Student(
+      id: doc.id,
       name: data['name'] ?? '', // Default to empty string if null
       enrollNumber: data['enrollNumber'] ?? '',
       isPresent: data['isPresent'] ?? false,

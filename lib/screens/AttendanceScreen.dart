@@ -26,16 +26,35 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     });
   }
 
-  void _saveAttendance() {
-    for (var student in students) {
-      _firestoreService.updateStudentAttendance(widget.batchId, student.enrollNumber, student.isPresent);
+  void _saveAttendance() async {
+    try {
+      final attendanceData = students.map((student) => {
+        'name': student.name,
+        'enrollNumber': student.enrollNumber,
+        'isPresent': student.isPresent,
+      }).toList();
+
+      await _firestoreService.saveAttendanceForDate(
+        widget.batchId,
+        DateTime.now(),
+        attendanceData,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Attendance saved successfully!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving attendance: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Attendance saved successfully!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   int presentCount = 0;

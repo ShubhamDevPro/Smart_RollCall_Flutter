@@ -108,4 +108,66 @@ class FirestoreService {
       rethrow;
     }
   }
+
+  // Add new method to save attendance for a specific date
+  Future<void> saveAttendanceForDate(String batchId, DateTime date, List<Map<String, dynamic>> attendanceData) async {
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    
+    try {
+      // Create a batch write to handle multiple operations
+      WriteBatch batch = _firestore.batch();
+      
+      // First, get all students in the batch
+      final studentsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .doc(batchId)
+          .collection('students')
+          .get();
+
+      // Create a map of enrollment numbers to student documents for quick lookup
+      final studentDocs = Map.fromEntries(
+        studentsSnapshot.docs.map((doc) => MapEntry(
+          doc.data()['enrollNumber'] as String,
+          doc
+        ))
+      );
+      
+      // For each student's attendance
+      for (var studentData in attendanceData) {
+        final studentDoc = studentDocs[studentData['enrollNumber']];
+        if (studentDoc != null) {
+          // Add attendance record to student's attendance subcollection
+          final attendanceRef = studentDoc.reference.collection('attendance').doc(dateStr);
+          batch.set(attendanceRef, {
+            'date': Timestamp.fromDate(date),
+            'isPresent': studentData['isPresent'],
+          });
+        }
+      }
+      
+      // Commit the batch
+      await batch.commit();
+    } catch (e) {
+      print('Error saving attendance: $e');
+      rethrow;
+    }
+  }
+
+  // Add method to get attendance for a specific date
+  Stream<QuerySnapshot> getAttendanceForDate(String batchId, String studentId, DateTime date) {
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('batches')
+        .doc(batchId)
+        .collection('students')
+        .doc(studentId)
+        .collection('attendance')
+        .where('date', isEqualTo: Timestamp.fromDate(date))
+        .snapshots();
+  }
 }
