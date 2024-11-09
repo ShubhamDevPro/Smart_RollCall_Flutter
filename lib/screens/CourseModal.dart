@@ -142,12 +142,12 @@ class _CourseModalState extends State<CourseModal> {
     }
 
     try {
-      // Call the onSave callback and wait for result
-      final success = await widget.onSave(
+      // Call the onSave callback
+      await widget.onSave(
           title, batchName, batchYear, _getIconFromCourseType(selectedCourseType));
       
-      // Close modal with success status if save was successful
-      if (success && mounted) {
+      // If we reach here without throwing an error, consider it successful
+      if (mounted) {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
