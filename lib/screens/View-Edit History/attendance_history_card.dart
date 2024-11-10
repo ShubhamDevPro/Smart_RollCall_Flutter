@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// A customizable card widget that displays student attendance information
 class AttendanceHistoryCard extends StatelessWidget {
   final String name;
   final String enrollNumber;
@@ -24,31 +25,36 @@ class AttendanceHistoryCard extends StatelessWidget {
         ? (presentDays / totalDays * 100).toStringAsFixed(1)
         : '0.0';
 
+    /// Build a Material [Card] with rounded corners and elevation
     return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      elevation: 2, // Add subtle shadow
+      margin: const EdgeInsets.symmetric(vertical: 6.0), // Spacing between cards
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12), // Rounded corners
       ),
       child: InkWell(
-        onTap: onStatusChanged,
-        borderRadius: BorderRadius.circular(12),
+        /// Enable tap interaction with ripple effect
+        onTap: onStatusChanged, // Trigger status change callback
+        borderRadius: BorderRadius.circular(12), // Match card corners
         child: ListTile(
+          /// Leading section shows attendance statistics
           leading: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min, // Take minimum required width
             children: [
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center, // Vertically center
+                crossAxisAlignment: CrossAxisAlignment.end, // Right align text
                 children: [
+                  /// Display attendance ratio (present/total days)
                   Text(
-                    '$presentDays/$totalDays',
+                    '$presentDays/$totalDays', // Format: "85/100"
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[600],
                     ),
                   ),
+                  /// Display attendance percentage
                   Text(
                     '$attendancePercentage%',
                     style: TextStyle(
@@ -60,7 +66,8 @@ class AttendanceHistoryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 8), // Spacing between stats and icon
+              /// Present/Absent status indicator icon
               CircleAvatar(
                 backgroundColor: isPresent
                     ? Colors.green.withOpacity(0.1)
@@ -72,8 +79,9 @@ class AttendanceHistoryCard extends StatelessWidget {
               ),
             ],
           ),
+          /// Main content shows student details
           title: Text(
-            name,
+            name, // Student's full name
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
           subtitle: Text('Enrollment No: $enrollNumber'),

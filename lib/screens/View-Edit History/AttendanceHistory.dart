@@ -1,45 +1,63 @@
+// File: AttendanceHistory.dart
+// Purpose: Displays and manages attendance history for a batch of students
+// Features: Date selection, search, attendance status updates, and Excel export
+
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 import 'package:smart_roll_call_flutter/screens/View-Edit History/attendance_history_card.dart';
 import 'package:smart_roll_call_flutter/screens/View-Edit History/attendance_summary_card.dart';
 import 'package:smart_roll_call_flutter/screens/View-Edit History/excel_export.dart';
 
+/// Screen widget that displays attendance history for a specific batch
+/// Allows viewing and editing attendance records for different dates
 class AttendanceHistoryScreen extends StatefulWidget {
+  // Unique identifier for the batch whose attendance is being displayed
   final String? batchId;
 
   const AttendanceHistoryScreen({Key? key, this.batchId}) : super(key: key);
 
   @override
-  _AttendanceHistoryScreenState createState() =>
-      _AttendanceHistoryScreenState();
+  _AttendanceHistoryScreenState createState() => _AttendanceHistoryScreenState();
 }
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
+  // Service instance to interact with Firestore database
   final FirestoreService _firestoreService = FirestoreService();
+  // Controller for the search text field
   final TextEditingController _searchController = TextEditingController();
 
+  // Currently selected date for attendance viewing
   DateTime selectedDate = DateTime.now();
+  // List to store all attendance records
   List<Map<String, dynamic>> attendanceData = [];
+  // List to store filtered attendance records based on search
   List<Map<String, dynamic>> filteredAttendanceData = [];
+  // Loading state flag
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    // Load attendance data when screen initializes
     _loadAttendanceData();
   }
 
   @override
   void dispose() {
+    // Clean up the controller when the widget is disposed
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Filters the attendance list based on search query
+  /// Matches student name or enrollment number
   void _filterAttendance(String query) {
     setState(() {
       if (query.isEmpty) {
+        // If search is empty, show all records
         filteredAttendanceData = attendanceData;
       } else {
+        // Filter based on name or enrollment number
         filteredAttendanceData = attendanceData.where((student) {
           final nameLower = student['name'].toString().toLowerCase();
           final enrollLower = student['enrollNumber'].toString().toLowerCase();
@@ -51,10 +69,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
   }
 
+  /// Fetches attendance data from Firestore for the selected date
   Future<void> _loadAttendanceData() async {
     setState(() => isLoading = true);
 
     try {
+      // Get attendance records for all students on selected date
       final data = await _firestoreService.getAttendanceForDateAll(
         selectedDate,
         widget.batchId,
@@ -65,6 +85,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       });
     } catch (e) {
       if (!mounted) return;
+      // Show error message if data loading fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading attendance: $e')),
       );
@@ -73,10 +94,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  /// Updates attendance status for a student
+  /// Toggles between present and absent
   Future<void> _updateAttendanceStatus(Map<String, dynamic> student) async {
     setState(() => isLoading = true);
 
     try {
+      // Toggle the attendance status
       final newStatus = !student['isPresent'];
       await _firestoreService.updateAttendanceStatus(
         student['batchId'],
@@ -84,9 +108,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         selectedDate,
         newStatus,
       );
+      // Reload data to reflect changes
       await _loadAttendanceData();
 
       if (!mounted) return;
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Attendance updated successfully'),
@@ -95,6 +121,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      // Show error message if update fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error updating attendance: $e'),
@@ -107,6 +134,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  /// Exports attendance data to Excel file
   Future<void> _exportAttendanceData() async {
     setState(() => isLoading = true);
 
@@ -114,6 +142,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       data: attendanceData,
       selectedDate: selectedDate,
       onError: (error) {
+        // Show error message if export fails
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error exporting data: $error'),
@@ -122,6 +151,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         );
       },
       onSuccess: () {
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Attendance data exported successfully'),
@@ -139,6 +169,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       appBar: AppBar(
         title: const Text('Attendance History'),
         actions: [
+          // Export button in app bar
           IconButton(
             icon: const Icon(Icons.download),
             onPressed: _exportAttendanceData,
@@ -148,7 +179,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       ),
       body: Column(
         children: [
-          // Date Selector
+          // Date selection and search section
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -159,9 +190,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             ),
             child: Column(
               children: [
+                // Date navigation row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Previous day button
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () {
@@ -172,6 +205,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         });
                       },
                     ),
+                    // Date picker button
                     TextButton(
                       onPressed: () async {
                         final DateTime? picked = await showDatePicker(
@@ -192,6 +226,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         style: const TextStyle(fontSize: 18),
                       ),
                     ),
+                    // Next day button (disabled if date is today)
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
                       onPressed: selectedDate.isBefore(DateTime.now())
@@ -206,6 +241,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     ),
                   ],
                 ),
+                // Search field
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: TextField(
@@ -236,18 +272,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             ),
           ),
 
-          // Attendance Summary
+          // Attendance summary cards section
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                // Total students card
                 AttendanceSummaryCard(
                   title: 'Total',
                   count: filteredAttendanceData.length.toString(),
                   icon: Icons.people,
                   color: Colors.blue,
                 ),
+                // Present students card
                 AttendanceSummaryCard(
                   title: 'Present',
                   count: filteredAttendanceData
@@ -257,6 +295,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   icon: Icons.check_circle,
                   color: Colors.green,
                 ),
+                // Absent students card
                 AttendanceSummaryCard(
                   title: 'Absent',
                   count: filteredAttendanceData
@@ -270,7 +309,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             ),
           ),
 
-          // Attendance List
+          // Attendance list section
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
