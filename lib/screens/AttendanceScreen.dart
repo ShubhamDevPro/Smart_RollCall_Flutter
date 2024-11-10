@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/models/student.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 import 'package:smart_roll_call_flutter/widgets/AddStudentModal.dart';
-import 'package:smart_roll_call_flutter/screens/AttendanceHistory.dart';
+import 'package:smart_roll_call_flutter/screens/View-Edit History/AttendanceHistory.dart';
 
 class AttendanceScreen extends StatefulWidget {
   final String batchId;

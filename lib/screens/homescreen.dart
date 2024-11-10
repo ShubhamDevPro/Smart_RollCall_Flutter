@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
-import 'package:smart_roll_call_flutter/screens/AttendanceHistory.dart';
+import 'package:smart_roll_call_flutter/screens/View-Edit%20History/AttendanceHistory.dart';
 import 'package:smart_roll_call_flutter/screens/CourseModal.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 
