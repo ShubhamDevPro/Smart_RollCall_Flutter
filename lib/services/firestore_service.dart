@@ -335,4 +335,42 @@ class FirestoreService {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> getAllAttendanceDataUntilDate(
+    DateTime endDate,
+    String? batchId,
+  ) async {
+    try {
+      final Map<String, dynamic> studentAttendance = {};
+      
+      // Get all attendance records up to the selected date
+      final QuerySnapshot attendanceSnapshot = await _firestore
+          .collection('attendance')
+          .where('batchId', isEqualTo: batchId)
+          .where('date', isLessThanOrEqualTo: endDate)
+          .get();
+
+      // Process attendance records
+      for (var doc in attendanceSnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final date = (data['date'] as Timestamp).toDate();
+        final dateStr = '${date.year}-${date.month}-${date.day}';
+        
+        for (var student in data['students']) {
+          final enrollNo = student['enrollNumber'];
+          if (!studentAttendance.containsKey(enrollNo)) {
+            studentAttendance[enrollNo] = {
+              'name': student['name'],
+              'attendance': {}
+            };
+          }
+          studentAttendance[enrollNo]['attendance'][dateStr] = student['isPresent'];
+        }
+      }
+
+      return studentAttendance;
+    } catch (e) {
+      throw Exception('Failed to fetch attendance data: $e');
+    }
+  }
 }

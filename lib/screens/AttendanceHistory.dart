@@ -15,7 +15,8 @@ class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({Key? key, this.batchId}) : super(key: key);
 
   @override
-  _AttendanceHistoryScreenState createState() => _AttendanceHistoryScreenState();
+  _AttendanceHistoryScreenState createState() =>
+      _AttendanceHistoryScreenState();
 }
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
@@ -134,143 +135,17 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
     try {
       final data = await _firestoreService.getAllAttendanceData();
-      final List<String> dates = data['dates'];
-      final Map<String, Map<String, bool>> studentAttendance =
-          data['studentAttendance'];
-      final Map<String, Map<String, String>> studentInfo = data['studentInfo'];
-
-      final excel = Excel.createExcel();
-      final Sheet sheet = excel['Attendance Record'];
-
-      // Style for header row
-      CellStyle headerStyle = CellStyle(
-        bold: true,
-        backgroundColorHex: '#CCCCCC',
-        horizontalAlign: HorizontalAlign.Center,
-      );
-
-      // Add headers
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0))
-        ..value = 'Name'
-        ..cellStyle = headerStyle;
-      sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
-        ..value = 'Enrollment Number'
-        ..cellStyle = headerStyle;
-
-      // Add date headers
-      for (int i = 0; i < dates.length; i++) {
-        final DateTime dateTime = DateTime.parse(dates[i]);
-        final String formattedDate =
-            '${dateTime.day}/${dateTime.month}/${dateTime.year}';
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i + 2, rowIndex: 0))
-          ..value = formattedDate
-          ..cellStyle = headerStyle;
-      }
-
-      // Add statistics headers
-      sheet.cell(CellIndex.indexByColumnRow(
-          columnIndex: dates.length + 2, rowIndex: 0))
-        ..value = 'Total Classes Attended'
-        ..cellStyle = headerStyle;
-      sheet.cell(CellIndex.indexByColumnRow(
-          columnIndex: dates.length + 3, rowIndex: 0))
-        ..value = 'Attendance Percentage'
-        ..cellStyle = headerStyle;
-
-      // Add student data
-      int rowIndex = 1;
-      studentInfo.forEach((enrollNumber, info) {
-        // Add student name and enrollment number
-        sheet
-            .cell(
-                CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-            .value = info['name'];
-        sheet
-            .cell(
-                CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex))
-            .value = enrollNumber;
-
-        // Calculate attendance statistics
-        int totalClasses = 0;
-        int classesAttended = 0;
-
-        // Add attendance for each date
-        for (int i = 0; i < dates.length; i++) {
-          final attendance = studentAttendance[enrollNumber]?[dates[i]];
-          final cell = sheet.cell(CellIndex.indexByColumnRow(
-            columnIndex: i + 2,
-            rowIndex: rowIndex,
-          ));
-
-          cell.value =
-              attendance == null ? 'N/A' : (attendance ? 'Present' : 'Absent');
-
-          // Update statistics
-          if (attendance != null) {
-            totalClasses++;
-            if (attendance) classesAttended++;
-          }
-
-          // Style for attendance cells
-          cell.cellStyle = CellStyle(
-            horizontalAlign: HorizontalAlign.Center,
-            backgroundColorHex: attendance == null
-                ? '#FFFFFF'
-                : (attendance ? '#E6FFE6' : '#FFE6E6'),
-          );
-        }
-
-        // Add statistics cells
-        final attendanceCell = sheet.cell(CellIndex.indexByColumnRow(
-          columnIndex: dates.length + 2,
-          rowIndex: rowIndex,
-        ));
-        attendanceCell.value = '$classesAttended/$totalClasses';
-        attendanceCell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          bold: true,
-        );
-
-        final percentageCell = sheet.cell(CellIndex.indexByColumnRow(
-          columnIndex: dates.length + 3,
-          rowIndex: rowIndex,
-        ));
-        final percentage = totalClasses > 0
-            ? (classesAttended / totalClasses * 100).toStringAsFixed(1) + '%'
-            : '0.0%';
-        percentageCell.value = percentage;
-        percentageCell.cellStyle = CellStyle(
-          horizontalAlign: HorizontalAlign.Center,
-          bold: true,
-          backgroundColorHex:
-              totalClasses > 0 && (classesAttended / totalClasses) >= 0.75
-                  ? '#E6FFE6'
-                  : '#FFE6E6',
-        );
-
-        rowIndex++;
-      });
-
-      // Auto-fit columns
-      sheet.setColWidth(0, 25); // Name column
-      sheet.setColWidth(1, 20); // Enrollment number column
-      for (int i = 2; i < dates.length + 2; i++) {
-        sheet.setColWidth(i, 15); // Date columns
-      }
-      sheet.setColWidth(dates.length + 2, 20); // Total attended column
-      sheet.setColWidth(dates.length + 3, 20); // Percentage column
-
-      // Generate Excel file bytes
+      final dataList =
+          data is Map ? [data] : data as List<Map<String, dynamic>>;
+      final excel = await generateExcelFile(dataList);
       final List<int>? excelBytes = excel.encode();
 
       if (excelBytes == null) throw 'Failed to generate Excel file';
 
-      if (kIsWeb) {
-        await downloadExcel(excelBytes);
-      } else {
-        throw UnsupportedError(
-            'Downloading Excel files is only supported on web platform');
-      }
+      await ExcelExport.downloadExcel(
+        excelBytes,
+        'attendance_report.xlsx',
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -294,29 +169,128 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
-  Future<void> downloadExcel(List<int> bytes) async {
-    try {
-      if (kIsWeb) {
-        // Web implementation using universal_html
-        final blob = html.Blob([bytes]);
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute("download", "attendance_report.xlsx")
-          ..click();
-        html.Url.revokeObjectUrl(url);
-      } else {
-        // Mobile implementation
-        final directory = await getApplicationDocumentsDirectory();
-        final file = File('${directory.path}/attendance_report.xlsx');
-        await file.writeAsBytes(bytes);
-        await Share.shareXFiles([XFile(file.path)], text: 'Attendance Report');
-      }
-    } catch (e) {
-      print('Error downloading file: $e');
-      rethrow;
+  // In AttendanceHistory.dart, update the exportAttendanceData method:
+
+Future<void> exportAttendanceData() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    // Get attendance data for the selected date and batch
+    final data = await _firestoreService.getAttendanceForDateAll(
+      selectedDate,
+      widget.batchId,
+    );
+    if (data.isEmpty) {
+      throw 'No attendance data available to export';
     }
+    
+    // Generate Excel file
+    final excel = generateExcelFile(data);
+    final List<int>? excelBytes = excel.encode();
+
+    if (excelBytes == null) {
+      throw 'Failed to generate Excel file';
+    }
+
+    final fileName = 'attendance_${selectedDate.toString().split(' ')[0]}.xlsx';
+
+    if (kIsWeb) {
+      // Web platform
+      final blob = html.Blob([excelBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute("download", fileName)
+        ..style.display = 'none';
+      html.document.body?.children.add(anchor);
+      anchor.click();
+      html.document.body?.children.remove(anchor);
+      html.Url.revokeObjectUrl(url);
+    } else {
+      // Mobile/Desktop platforms
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(excelBytes);
+      
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Attendance Report for ${selectedDate.toString().split(' ')[0]}',
+      );
+
+      // Clean up temporary file
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Attendance data exported successfully'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error exporting data: $e'),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
+// In AttendanceHistory.dart, update the generateExcelFile method:
+
+Excel generateExcelFile(List<Map<String, dynamic>> data) {
+  final excel = Excel.createExcel();
+  final sheet = excel['Attendance'];
+
+  // Add headers
+  sheet.appendRow([
+    'Date', 
+    'Name', 
+    'Enrollment Number', 
+    'Status', 
+    'Total Days', 
+    'Present Days', 
+    'Attendance %'
+  ]);
+
+  // Add data rows
+  for (var record in data) {
+    // Calculate attendance percentage
+    final totalDays = record['totalDays'] ?? 0;
+    final presentDays = record['presentDays'] ?? 0;
+    final attendancePercentage = totalDays > 0 
+        ? (presentDays / totalDays * 100).toStringAsFixed(1) 
+        : '0.0';
+
+    sheet.appendRow([
+      selectedDate.toString().split(' ')[0], // Format date as YYYY-MM-DD
+      record['name'] ?? '',
+      record['enrollNumber'] ?? '',
+      record['isPresent'] == true ? 'Present' : 'Absent',
+      totalDays.toString(),
+      presentDays.toString(),
+      '$attendancePercentage%'
+    ]);
   }
 
+  // Auto-fit columns
+  for (var i = 0; i < sheet.maxCols; i++) {
+    sheet.setColWidth(i, 15.0);
+  }
+
+  return excel;
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -325,18 +299,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         actions: [
           // Add export button in AppBar
           IconButton(
-            icon: isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : const Icon(Icons.file_download),
-            tooltip: 'Export to Excel',
-            onPressed: isLoading ? null : _exportToExcel,
+            icon: const Icon(Icons.download),
+            onPressed: exportAttendanceData,
+            tooltip: 'Export Attendance Data',
           ),
         ],
       ),
@@ -643,5 +608,23 @@ class AttendanceHistoryCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ExcelExport {
+  static Future<void> downloadExcel(
+      List<int> excelBytes, String fileName) async {
+    if (kIsWeb) {
+      final blob = html.Blob([excelBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement()
+        ..href = url
+        ..style.display = 'none'
+        ..download = fileName;
+      html.document.body?.children.add(anchor);
+      anchor.click();
+      html.document.body?.children.remove(anchor);
+      html.Url.revokeObjectUrl(url);
+    }
   }
 }

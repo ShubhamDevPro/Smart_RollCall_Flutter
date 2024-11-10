@@ -27,6 +27,10 @@ class AddStudentModalState extends State<AddStudentModal> {
 
   /// Handles the addition of a new student to Firestore
   Future<void> _addStudent() async {
+    // Dismiss keyboard first
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
+
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;

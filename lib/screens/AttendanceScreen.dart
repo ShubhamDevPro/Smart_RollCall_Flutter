@@ -36,8 +36,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         final nameLower = student.name.toLowerCase();
         final enrollLower = student.enrollNumber.toLowerCase();
         final searchLower = query.toLowerCase();
-        return nameLower.contains(searchLower) || 
-               enrollLower.contains(searchLower);
+        return nameLower.contains(searchLower) ||
+              enrollLower.contains(searchLower);
       }).toList();
     });
   }
@@ -49,6 +49,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   void _saveAttendance() async {
+    // Dismiss keyboard more forcefully
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
+    
     try {
       final attendanceData = students.map((student) => {
         'name': student.name,
@@ -73,8 +77,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         ),
       );
 
-      // Navigate to AttendanceHistory screen with the batchId
-      Navigator.push(
+      // Replace the current screen with AttendanceHistory
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => AttendanceHistoryScreen(
@@ -132,225 +136,228 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Widget build(BuildContext context) {
     final absentCount = students.length - presentCount;
     
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Take Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: _clearSelection,
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Reset Attendance',
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.8)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Take Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
+          elevation: 0,
+          actions: [
+            IconButton(
+              onPressed: _clearSelection,
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: 'Reset Attendance',
             ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Today\'s Attendance',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '(${_getCurrentDate()})',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.8)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                const SizedBox(height: 24),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: _buildStatCard(
-                          'Total',
-                          '${students.length}',
-                          Icons.groups_rounded,
-                          Theme.of(context).primaryColor.withBlue(255),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: _buildStatCard(
-                          'Present',
-                          '$presentCount',
-                          Icons.check_circle_rounded,
-                          Colors.green,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: _buildStatCard(
-                          'Absent',
-                          '$absentCount',
-                          Icons.cancel_rounded,
-                          Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by name or enrollment number',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterStudents('');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade50,
-              ),
-              onChanged: _filterStudents,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Students List',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: students.isEmpty ? null : _toggleSelectAll,
-                  icon: Icon(
-                    presentCount == students.length ? Icons.deselect : Icons.select_all,
-                    size: 20,
-                  ),
-                  label: Text(
-                    presentCount == students.length ? 'Deselect All' : 'Select All',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Chip(
-                  label: Text(
-                    '${presentCount}/${students.length}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Theme.of(context).primaryColor,
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: filteredStudents.isEmpty
-                ? Center(
-                    child: Text(
-                      'No students found',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredStudents.length,
-                    itemBuilder: (context, index) {
-                      return StudentCard(
-                        student: filteredStudents[index],
-                        onChanged: _updateAttendance,
-                      );
-                    },
-                  ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: ElevatedButton(
-                  onPressed: presentCount > 0 ? _saveAttendance : null,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(150, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.save_rounded),
-                      const SizedBox(width: 8),
-                      const Flexible(
+                      Flexible(
                         child: Text(
-                          'Save Attendance',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          'Today\'s Attendance',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 16,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '(${_getCurrentDate()})',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: _buildStatCard(
+                            'Total',
+                            '${students.length}',
+                            Icons.groups_rounded,
+                            Theme.of(context).primaryColor.withBlue(255),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: _buildStatCard(
+                            'Present',
+                            '$presentCount',
+                            Icons.check_circle_rounded,
+                            Colors.green,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: _buildStatCard(
+                            'Absent',
+                            '$absentCount',
+                            Icons.cancel_rounded,
+                            Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search by name or enrollment number',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _filterStudents('');
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                ),
+                onChanged: _filterStudents,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Students List',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: students.isEmpty ? null : _toggleSelectAll,
+                    icon: Icon(
+                      presentCount == students.length ? Icons.deselect : Icons.select_all,
+                      size: 20,
+                    ),
+                    label: Text(
+                      presentCount == students.length ? 'Deselect All' : 'Select All',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Chip(
+                    label: Text(
+                      '${presentCount}/${students.length}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Theme.of(context).primaryColor,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: filteredStudents.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No students found',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredStudents.length,
+                      itemBuilder: (context, index) {
+                        return StudentCard(
+                          student: filteredStudents[index],
+                          onChanged: _updateAttendance,
+                        );
+                      },
+                    ),
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: ElevatedButton(
+                    onPressed: presentCount > 0 ? _saveAttendance : null,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(150, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.save_rounded),
+                        const SizedBox(width: 8),
+                        const Flexible(
+                          child: Text(
+                            'Save Attendance',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            builder: (context) => AddStudentModal(batchId: widget.batchId),
-          );
-        },
-        child: const Icon(Icons.add),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (context) => AddStudentModal(batchId: widget.batchId),
+            );
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
