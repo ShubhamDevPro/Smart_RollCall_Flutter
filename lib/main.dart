@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:smart_roll_call_flutter/screens/homescreen.dart';
+import 'auth/auth_page.dart';
 import 'firebase_options.dart'; // Import the generated file
 
 void main() async {
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: AuthPage(),
     );
   }
 }
