@@ -128,46 +128,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
-  Future<void> _exportToExcel() async {
-    setState(() {
-      isLoading = true;
-    });
 
-    try {
-      final data = await _firestoreService.getAllAttendanceData();
-      final dataList =
-          data is Map ? [data] : data as List<Map<String, dynamic>>;
-      final excel = await generateExcelFile(dataList);
-      final List<int>? excelBytes = excel.encode();
-
-      if (excelBytes == null) throw 'Failed to generate Excel file';
-
-      await ExcelExport.downloadExcel(
-        excelBytes,
-        'attendance_report.xlsx',
-      );
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Attendance data exported successfully'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error exporting data: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
 
   // In AttendanceHistory.dart, update the exportAttendanceData method:
 
@@ -611,20 +572,4 @@ class AttendanceHistoryCard extends StatelessWidget {
   }
 }
 
-class ExcelExport {
-  static Future<void> downloadExcel(
-      List<int> excelBytes, String fileName) async {
-    if (kIsWeb) {
-      final blob = html.Blob([excelBytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement()
-        ..href = url
-        ..style.display = 'none'
-        ..download = fileName;
-      html.document.body?.children.add(anchor);
-      anchor.click();
-      html.document.body?.children.remove(anchor);
-      html.Url.revokeObjectUrl(url);
-    }
-  }
-}
+
