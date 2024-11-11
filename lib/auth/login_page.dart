@@ -1,16 +1,22 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
-
 import '../services/auth_service.dart';
 import 'auth_success_animation.dart';
+import '../screens/Student_HomeScreen.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  LoginPage({super.key});
+  bool isProfessorLogin = true; // Track selected role
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +80,78 @@ class LoginPage extends StatelessWidget {
                     ),
                     SizedBox(height: 48),
 
+                    // Role Selection Buttons
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 15,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => isProfessorLogin = true),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isProfessorLogin
+                                      ? Colors.teal
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.horizontal(
+                                      left: Radius.circular(12)),
+                                ),
+                                child: Text(
+                                  'Professor Login',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: isProfessorLogin
+                                        ? Colors.white
+                                        : Colors.teal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => isProfessorLogin = false),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: !isProfessorLogin
+                                      ? Colors.teal
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.horizontal(
+                                      right: Radius.circular(12)),
+                                ),
+                                child: Text(
+                                  'Student Login',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: !isProfessorLogin
+                                        ? Colors.white
+                                        : Colors.teal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     // Login Form
                     Container(
                       padding: EdgeInsets.all(24),
@@ -98,23 +176,27 @@ class LoginPage extends StatelessWidget {
                               controller: _emailController,
                               decoration: InputDecoration(
                                 labelText: 'Email',
-                                prefixIcon: Icon(Icons.email_outlined, color: Colors.teal),
+                                prefixIcon: Icon(Icons.email_outlined,
+                                    color: Colors.teal),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.teal.shade200),
+                                  borderSide:
+                                      BorderSide(color: Colors.teal.shade200),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.teal, width: 2),
+                                  borderSide:
+                                      BorderSide(color: Colors.teal, width: 2),
                                 ),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter your email';
-                                } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                                } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                    .hasMatch(value)) {
                                   return 'Please enter a valid email';
                                 }
                                 return null;
@@ -128,17 +210,20 @@ class LoginPage extends StatelessWidget {
                               obscureText: true,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: Icon(Icons.lock_outline, color: Colors.teal),
+                                prefixIcon: Icon(Icons.lock_outline,
+                                    color: Colors.teal),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.teal.shade200),
+                                  borderSide:
+                                      BorderSide(color: Colors.teal.shade200),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.teal, width: 2),
+                                  borderSide:
+                                      BorderSide(color: Colors.teal, width: 2),
                                 ),
                               ),
                               validator: (value) {
@@ -172,15 +257,27 @@ class LoginPage extends StatelessWidget {
                               child: ElevatedButton(
                                 onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
-                                    final _authService = AuthService();
-                                    bool success = await _authService.signInWithEmailPassword(
-                                      _emailController.text,
-                                      _passwordController.text,
-                                    );
-                                    if (success) {
+                                    if (isProfessorLogin) {
+                                      final _authService = AuthService();
+                                      bool success = await _authService
+                                          .signInWithEmailPassword(
+                                        _emailController.text,
+                                        _passwordController.text,
+                                      );
+                                      if (success) {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AuthSuccessAnimation()),
+                                        );
+                                      }
+                                    } else {
+                                      // For student login, navigate to Student HomeScreen
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(builder: (context) => AuthSuccessAnimation()),
+                                        MaterialPageRoute(
+                                            builder: (context) => MyHomePage()),
                                       );
                                     }
                                   }
