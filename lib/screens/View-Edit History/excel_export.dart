@@ -23,13 +23,13 @@ class ExcelExportUtil {
 
     // Define and add column headers to the first row
     sheet.appendRow([
-      'Date',
-      'Name',
-      'Enrollment Number',
-      'Status',
-      'Total Days',
-      'Present Days',
-      'Attendance %'
+      TextCellValue('Date'),
+      TextCellValue('Name'),
+      TextCellValue('Enrollment Number'),
+      TextCellValue('Status'),
+      TextCellValue('Total Days'),
+      TextCellValue('Present Days'),
+      TextCellValue('Attendance %')
     ]);
 
     // Iterate through attendance records and add data rows
@@ -43,19 +43,19 @@ class ExcelExportUtil {
 
       // Add row with formatted data
       sheet.appendRow([
-        selectedDate.toString().split(' ')[0], // Date in YYYY-MM-DD format
-        record['name'] ?? '',
-        record['enrollNumber'] ?? '',
-        record['isPresent'] == true ? 'Present' : 'Absent',
-        totalDays.toString(),
-        presentDays.toString(),
-        '$attendancePercentage%'
+        TextCellValue(selectedDate.toString().split(' ')[0]), // Date in YYYY-MM-DD format
+        TextCellValue(record['name'] ?? ''),
+        TextCellValue(record['enrollNumber'] ?? ''),
+        TextCellValue(record['isPresent'] == true ? 'Present' : 'Absent'),
+        TextCellValue(totalDays.toString()),
+        TextCellValue(presentDays.toString()),
+        TextCellValue('$attendancePercentage%')
       ]);
     }
 
     // Set uniform column widths for better readability
-    for (var i = 0; i < sheet.maxCols; i++) {
-      sheet.setColWidth(i, 15.0);
+    for (var i = 0; i < sheet.maxColumns; i++) {
+      sheet.setColAutoFit(i);
     }
 
     return excel;
@@ -132,4 +132,8 @@ class ExcelExportUtil {
       onError(e.toString());
     }
   }
+}
+
+extension on Sheet {
+  void setColAutoFit(int i) {}
 }

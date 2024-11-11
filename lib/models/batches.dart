@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-// A form widget that contains input fields for batch information
+// A form widget that contains all course and batch input fields
 class BatchFormFields extends StatelessWidget {
   // Controllers to manage the text input values
+  final TextEditingController titleController;
   final TextEditingController batchNameController;
   final TextEditingController batchYearController;
   // Customizable UI parameters
@@ -11,6 +12,7 @@ class BatchFormFields extends StatelessWidget {
 
   const BatchFormFields({
     super.key,
+    required this.titleController,
     required this.batchNameController,
     required this.batchYearController,
     this.spacing = 16,
@@ -22,6 +24,19 @@ class BatchFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Course Title input field
+        TextField(
+          controller: titleController,
+          decoration: InputDecoration(
+            labelText: 'Course Title',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(borderRadius),
+            ),
+            prefixIcon: const Icon(Icons.book),
+          ),
+          textCapitalization: TextCapitalization.words,
+        ),
+        SizedBox(height: spacing),
         // Batch Name input field
         TextField(
           controller: batchNameController,
@@ -30,11 +45,10 @@ class BatchFormFields extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            prefixIcon: const Icon(Icons.group), // Group icon to indicate batch
+            prefixIcon: const Icon(Icons.group),
           ),
-          textCapitalization: TextCapitalization.words, // Capitalize each word
+          textCapitalization: TextCapitalization.words,
         ),
-        // Vertical spacing between fields
         SizedBox(height: spacing),
         // Batch Year input field
         TextField(
@@ -44,9 +58,9 @@ class BatchFormFields extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            prefixIcon: const Icon(Icons.calendar_today), // Calendar icon for year
+            prefixIcon: const Icon(Icons.calendar_today),
           ),
-          keyboardType: TextInputType.number, // Show numeric keyboard
+          keyboardType: TextInputType.number,
         ),
       ],
     );

@@ -74,7 +74,7 @@ class _CourseModalState extends State<CourseModal> {
               ],
             ),
             const SizedBox(height: 20),
-            // Icon selector
+            // Course type selector
             Row(
               children: [
                 CircleAvatar(
@@ -93,23 +93,14 @@ class _CourseModalState extends State<CourseModal> {
               ],
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                labelText: 'Course Title',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.book),
-              ),
-              textCapitalization: TextCapitalization.words,
-            ),
-            const SizedBox(height: 16),
+            // Form fields
             BatchFormFields(
+              titleController: titleController,
               batchNameController: batchNameController,
               batchYearController: batchYearController,
             ),
             const SizedBox(height: 24),
+            // Save button
             ElevatedButton(
               onPressed: _isLoading ? null : _validateAndSave,
               style: ElevatedButton.styleFrom(
