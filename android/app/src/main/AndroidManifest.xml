@@ -4,9 +4,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         
-        android:label="smart_roll_call_flutter"
+        android:label="Smart Roll Call"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/launcher_icon"
         android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
