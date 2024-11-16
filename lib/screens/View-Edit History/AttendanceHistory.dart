@@ -204,9 +204,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                 // Date navigation row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Previous day button
                     IconButton(
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () {
                         setState(() {
@@ -217,28 +220,33 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       },
                     ),
                     // Date picker button
-                    TextButton(
-                      onPressed: () async {
-                        final DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: selectedDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                        );
-                        if (picked != null && picked != selectedDate) {
-                          setState(() {
-                            selectedDate = picked;
-                            _loadAttendanceData();
-                          });
-                        }
-                      },
-                      child: Text(
-                        '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                        style: const TextStyle(fontSize: 18),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null && picked != selectedDate) {
+                            setState(() {
+                              selectedDate = picked;
+                              _loadAttendanceData();
+                            });
+                          }
+                        },
+                        child: Text(
+                          '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                          style: const TextStyle(fontSize: 16),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     // Next day button (disabled if date is today)
                     IconButton(
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
                       icon: const Icon(Icons.chevron_right),
                       onPressed: selectedDate.isBefore(DateTime.now())
                           ? () {
@@ -290,31 +298,39 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 // Total students card
-                AttendanceSummaryCard(
-                  title: 'Total',
-                  count: filteredAttendanceData.length.toString(),
-                  icon: Icons.people,
-                  color: Colors.blue,
+                Expanded(
+                  child: AttendanceSummaryCard(
+                    title: 'Total',
+                    count: filteredAttendanceData.length.toString(),
+                    icon: Icons.people,
+                    color: Colors.blue,
+                  ),
                 ),
+                const SizedBox(width: 8), // Add spacing between cards
                 // Present students card
-                AttendanceSummaryCard(
-                  title: 'Present',
-                  count: filteredAttendanceData
-                      .where((s) => s['isPresent'])
-                      .length
-                      .toString(),
-                  icon: Icons.check_circle,
-                  color: Colors.green,
+                Expanded(
+                  child: AttendanceSummaryCard(
+                    title: 'Present',
+                    count: filteredAttendanceData
+                        .where((s) => s['isPresent'])
+                        .length
+                        .toString(),
+                    icon: Icons.check_circle,
+                    color: Colors.green,
+                  ),
                 ),
+                const SizedBox(width: 8), // Add spacing between cards
                 // Absent students card
-                AttendanceSummaryCard(
-                  title: 'Absent',
-                  count: filteredAttendanceData
-                      .where((s) => !s['isPresent'])
-                      .length
-                      .toString(),
-                  icon: Icons.cancel,
-                  color: Colors.red,
+                Expanded(
+                  child: AttendanceSummaryCard(
+                    title: 'Absent',
+                    count: filteredAttendanceData
+                        .where((s) => !s['isPresent'])
+                        .length
+                        .toString(),
+                    icon: Icons.cancel,
+                    color: Colors.red,
+                  ),
                 ),
               ],
             ),
