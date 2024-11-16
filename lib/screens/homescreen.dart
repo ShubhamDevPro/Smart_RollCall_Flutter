@@ -3,6 +3,8 @@ import 'package:smart_roll_call_flutter/screens/AttendanceScreen.dart';
 import 'package:smart_roll_call_flutter/screens/View-Edit%20History/AttendanceHistory.dart';
 import 'package:smart_roll_call_flutter/screens/CourseModal.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
+import 'package:smart_roll_call_flutter/screens/settings_screen.dart';
+import 'package:smart_roll_call_flutter/screens/attendance_overview_screen.dart';
 
 // Main widget for the home page
 class MyHomePage extends StatefulWidget {
@@ -20,12 +22,35 @@ class _MyHomePageState extends State<MyHomePage> {
   final FirestoreService _firestoreService = FirestoreService();
   // Boolean to track loading state
   bool _isLoading = false;
+  // Add selected index for bottom nav
+  int _selectedIndex = 0;
+  
+  // Add page controller
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
-    // Load courses when the widget is initialized
     _loadCourses();
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // Method to handle bottom nav tap
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   // Method to load courses from Firestore
@@ -125,46 +150,44 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Container(
-              color: Colors.grey[100],
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
-                    child: Text(
-                      "My Courses",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: courses.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: courses.length,
-                            itemBuilder: (context, index) {
-                              final course = courses[index];
-                              return _buildCourseCard(
-                                context: context,
-                                icon: course['icon'],
-                                title: course['title'],
-                                batchName: course['batchName'],
-                                batchYear: course['batchYear'],
-                                index: index,
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            ),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _selectedIndex = index);
+        },
+        children: [
+          // Home page (existing content)
+          _buildHomePage(),
+          
+          // Attendance Overview page
+          const AttendanceOverviewScreen(),
+          
+          // Settings page
+          const SettingsScreen(),
+        ],
+      ),
+
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: 'Attendance',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: _addCourse,
@@ -172,6 +195,50 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add, size: 28),
       ),
     );
+  }
+
+  // Move existing home page content to a separate method
+  Widget _buildHomePage() {
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Container(
+            color: Colors.grey[100],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Text(
+                    "My Courses",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: courses.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: courses.length,
+                          itemBuilder: (context, index) {
+                            final course = courses[index];
+                            return _buildCourseCard(
+                              context: context,
+                              icon: course['icon'],
+                              title: course['title'],
+                              batchName: course['batchName'],
+                              batchYear: course['batchYear'],
+                              index: index,
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
   }
 
   Widget _buildEmptyState() {
@@ -403,7 +470,28 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (confirm == true) {
-      // ... existing delete logic ...
+      try {
+        setState(() => _isLoading = true);
+        // Delete the course from Firestore
+        await _firestoreService.deleteBatch(courses[index]['batchId']);
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Course deleted successfully')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting course: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
