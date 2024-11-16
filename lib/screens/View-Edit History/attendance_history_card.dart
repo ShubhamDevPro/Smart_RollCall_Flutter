@@ -16,8 +16,8 @@ class AttendanceHistoryCard extends StatelessWidget {
     required this.onStatusChanged,
     this.totalDays = 0,
     this.presentDays = 0,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -49,11 +49,11 @@ class HomePage extends StatelessWidget {
                   );
                 }
               },
-              child: Text("Logout"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               ),
+              child: Text("Logout"),
             ),
           ],
         ),

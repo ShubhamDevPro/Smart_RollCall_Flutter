@@ -93,6 +93,7 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 dev_dependencies:
   flutter_launcher_icons: "^0.13.1" # Or the latest version
+  flutter_test: any
 flutter_icons:
   android: "launcher_icon" 
   ios: true

@@ -16,7 +16,7 @@ import 'package:smart_roll_call_flutter/screens/View-Edit History/AttendanceHist
 class AttendanceScreen extends StatefulWidget {
   final String batchId;
 
-  AttendanceScreen({required this.batchId});
+  const AttendanceScreen({super.key, required this.batchId});
 
   @override
   _AttendanceScreenState createState() => _AttendanceScreenState();
@@ -325,7 +325,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   // Attendance count chip
                   Chip(
                     label: Text(
-                      '${presentCount}/${students.length}',
+                      '$presentCount/${students.length}',
                       style: const TextStyle(color: Colors.white),
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
@@ -455,7 +455,7 @@ class StudentCard extends StatefulWidget {
   final Student student;
   final ValueChanged<bool> onChanged;
 
-  StudentCard({required this.student, required this.onChanged});
+  const StudentCard({super.key, required this.student, required this.onChanged});
 
   @override
   _StudentCardState createState() => _StudentCardState();

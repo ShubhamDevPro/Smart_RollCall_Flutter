@@ -46,16 +46,20 @@ class AddStudentModalState extends State<AddStudentModal> {
             'isPresent': false, // Default attendance status
           },
         );
+        if (!mounted) return;
         Navigator.pop(context); // Close modal on success
       } catch (e) {
+        if (!mounted) return;
         // Show error message if addition fails
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding student: $e')),
         );
       } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }

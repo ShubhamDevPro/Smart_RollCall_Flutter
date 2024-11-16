@@ -6,7 +6,7 @@ import 'auth_success_animation.dart';
 import '../screens/Student_HomeScreen.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({super.key});
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -258,8 +258,8 @@ class _LoginPageState extends State<LoginPage> {
                                 onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
                                     if (isProfessorLogin) {
-                                      final _authService = AuthService();
-                                      bool success = await _authService
+                                      final authService = AuthService();
+                                      bool success = await authService
                                           .signInWithEmailPassword(
                                         _emailController.text,
                                         _passwordController.text,

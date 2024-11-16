@@ -14,7 +14,7 @@ class AttendanceHistoryScreen extends StatefulWidget {
   // Unique identifier for the batch whose attendance is being displayed
   final String? batchId;
 
-  const AttendanceHistoryScreen({Key? key, this.batchId}) : super(key: key);
+  const AttendanceHistoryScreen({super.key, this.batchId});
 
   @override
   _AttendanceHistoryScreenState createState() => _AttendanceHistoryScreenState();
