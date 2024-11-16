@@ -54,9 +54,12 @@ class MyHomePage extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundImage:
-                          NetworkImage('https://via.placeholder.com/150'),
-                      backgroundColor: Colors.blue.shade100,
+                      backgroundColor: Colors.blue.shade400,
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.white,
+                      ),
                     ),
                     SizedBox(width: 16),
                     Expanded(

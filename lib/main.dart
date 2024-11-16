@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'auth/auth_page.dart';
-import 'screens/homescreen.dart';
 import 'firebase_options.dart'; // Import the generated file
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  const int defaultBufferSize = 1000;
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
   
   try {
     await Firebase.initializeApp(
@@ -30,7 +34,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: AuthPage(),
     );
   }
 }
