@@ -72,6 +72,7 @@ class MyHomePage extends StatelessWidget {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 4),
                           Text(
@@ -80,6 +81,7 @@ class MyHomePage extends StatelessWidget {
                               fontSize: 14,
                               color: Colors.grey.shade700,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -234,15 +236,17 @@ class MyHomePage extends StatelessWidget {
           child: Row(
             children: [
               Icon(icon, color: Colors.blue.shade700),
-              SizedBox(width: 16),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Spacer(),
               Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
             ],
           ),
