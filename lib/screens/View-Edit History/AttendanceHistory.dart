@@ -71,9 +71,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
   /// Fetches attendance data from Firestore for the selected date
   Future<void> _loadAttendanceData() async {
-    setState(() => isLoading = true);
-
     try {
+      // Check if widget is still mounted before calling setState
+      if (!mounted) return;
+      
+      setState(() {
+        isLoading = true;
+      });
+
       // Get attendance records for all students on selected date
       final data = await _firestoreService.getAttendanceForDateAll(
         selectedDate,
@@ -83,14 +88,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         attendanceData = data;
         filteredAttendanceData = data;
       });
+
+      if (!mounted) return;  // Check again before final setState
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       if (!mounted) return;
       // Show error message if data loading fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading attendance: $e')),
       );
-    } finally {
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 

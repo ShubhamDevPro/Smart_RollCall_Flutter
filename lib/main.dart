@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'auth/auth_page.dart';
+import 'screens/homescreen.dart';
 import 'firebase_options.dart'; // Import the generated file
 
 void main() async {
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: AuthPage(),
+      home: MyHomePage(),
     );
   }
 }

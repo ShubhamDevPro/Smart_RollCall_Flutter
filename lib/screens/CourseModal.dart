@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smart_roll_call_flutter/models/batches.dart';
+import 'package:smart_roll_call_flutter/widgets/batches.dart';
 
 // A modal widget that handles both creating and editing course information
 class CourseModal extends StatefulWidget {

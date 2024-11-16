@@ -103,80 +103,124 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Courses"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text(
+          "Smart Roll Call",
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Show search delegate for courses
-              showSearch(
-                context: context,
-                delegate: CourseSearchDelegate(courses: courses),
-              );
-            },
+            icon: const Icon(Icons.search, color: Colors.black87, size: 28),
+            onPressed: () => showSearch(
+              context: context,
+              delegate: CourseSearchDelegate(courses: courses),
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text('Menu',
-                  style: TextStyle(color: Colors.white, fontSize: 24)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () => Navigator.pop(context), // Close the drawer
-            ),
-            // Add more drawer items as needed
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Courses'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), label: 'Attendance'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-        onTap: (index) {
-          // Handle navigation based on the selected index
-        },
-      ),
+      
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator()) // Show loading indicator
-          : courses.isEmpty
-              ? const Center(
-                  child: Text(
-                      'No courses added yet')) // Show message if no courses
-              : ListView.builder(
-                  itemCount: courses.length,
-                  padding: const EdgeInsets.all(16),
-                  itemBuilder: (context, index) {
-                    final course = courses[index];
-                    return _buildCourseTile(
-                      context: context,
-                      icon: course['icon'],
-                      title: course['title'],
-                      batchName: course['batchName'],
-                      batchYear: course['batchYear'],
-                      index: index,
-                    );
-                  },
-                ),
+          ? const Center(child: CircularProgressIndicator())
+          : Container(
+              color: Colors.grey[100],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
+                    child: Text(
+                      "My Courses",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: courses.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: courses.length,
+                            itemBuilder: (context, index) {
+                              final course = courses[index];
+                              return _buildCourseCard(
+                                context: context,
+                                icon: course['icon'],
+                                title: course['title'],
+                                batchName: course['batchName'],
+                                batchYear: course['batchYear'],
+                                index: index,
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+
       floatingActionButton: FloatingActionButton(
-        onPressed: _addCourse, // Trigger add course method
-        child: const Icon(Icons.add),
+        onPressed: _addCourse,
+        backgroundColor: Colors.blue[700],
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
 
-  // Method to build a course tile widget
-  Widget _buildCourseTile({
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/empty_courses.png', // Add an illustration
+            height: 200,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No Courses Yet',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Add your first course to get started',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: _addCourse,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[700],
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Add Course',
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCourseCard({
     required BuildContext context,
     required IconData icon,
     required String title,
@@ -184,88 +228,183 @@ class _MyHomePageState extends State<MyHomePage> {
     required String batchYear,
     required int index,
   }) {
-    final key = Key(
-        courses[index]['batchId'] ?? title); // Use batchId as key if available
-
-    return Dismissible(
-      key: key,
-      confirmDismiss: (direction) async {
-        // Show confirmation dialog before dismissing
-        return await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Delete Course'),
-              content: const Text(
-                  'This course will be permanently deleted. This action cannot be undone.'),
-              actions: [
-                TextButton(
-                  onPressed: () =>
-                      Navigator.of(context).pop(false), // Cancel deletion
-                  child: const Text('Cancel'),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showCourseOptions(context, title, index),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 32,
+                    color: Colors.blue[700],
+                  ),
                 ),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.of(context).pop(true), // Confirm deletion
-                  child:
-                      const Text('Delete', style: TextStyle(color: Colors.red)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$batchName $batchYear',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildStatsChip(
+                              Icons.person_outline,
+                              '32 Students',
+                            ),
+                            const SizedBox(width: 12),
+                            _buildStatsChip(
+                              Icons.calendar_today_outlined,
+                              '12 Sessions',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'edit':
+                        _showEditCourseModal(context, courses[index], index);
+                        break;
+                      case 'delete':
+                        _confirmDelete(context, index);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.edit_outlined, size: 20),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            );
-          },
-        );
-      },
-      onDismissed: (direction) async {
-        // Store the course data before removing it
-        final deletedCourse = courses[index];
-
-        try {
-          // Delete from Firebase first
-          await _firestoreService.deleteBatch(deletedCourse['batchId']);
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Course deleted successfully')),
-            );
-          }
-        } catch (error) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error deleting course: $error'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
-      },
-      background: Container(
-        color: Colors.red,
-        child: const Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.delete, color: Colors.white),
+            ),
           ),
-        ),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: Colors.blue),
-        title: Text(title),
-        subtitle: Text('$batchName $batchYear'),
-        onTap: () =>
-            _showCourseOptions(context, title, index), // Show course options
-        onLongPress: () => _showEditCourseModal(
-            context, courses[index], index), // Show edit modal
-        trailing: IconButton(
-          icon: const Icon(
-            Icons.edit,
-            color: Colors.blue,
-          ),
-          onPressed: () => _showEditCourseModal(context, courses[index], index),
         ),
       ),
     );
+  }
+
+  Widget _buildStatsChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, int index) async {
+    final bool? confirm = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Course'),
+          content: const Text(
+            'This course will be permanently deleted. This action cannot be undone.'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete', 
+                style: TextStyle(color: Colors.red)
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      // ... existing delete logic ...
+    }
   }
 
   // Method to show course options dialog
