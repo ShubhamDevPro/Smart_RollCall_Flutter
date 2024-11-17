@@ -5,8 +5,7 @@ import 'firebase_options.dart'; // Import the generated file
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  const int defaultBufferSize = 1000;
+  //const int defaultBufferSize = 1000;
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
   };
