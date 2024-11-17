@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'attendance_dashboard.dart';
+import '../auth/auth_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -34,6 +36,15 @@ class MyHomePage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.settings_outlined),
             onPressed: () {},
+          ),
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AuthPage()),
+              );
+            },
           ),
         ],
       ),
@@ -172,9 +183,10 @@ class MyHomePage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 12),
-              _buildOptionItem("Check Attendance Report", Icons.bar_chart),
-              _buildOptionItem("Faculty Details", Icons.people),
-              _buildOptionItem("Class Details", Icons.class_),
+              _buildOptionItem(
+                  "Check Attendance Report", Icons.bar_chart, context),
+              _buildOptionItem("Faculty Details", Icons.people, context),
+              _buildOptionItem("Class Details", Icons.class_, context),
             ],
           ),
         ),
@@ -221,7 +233,7 @@ class MyHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionItem(String title, IconData icon) {
+  Widget _buildOptionItem(String title, IconData icon, BuildContext context) {
     return Card(
       elevation: 2,
       margin: EdgeInsets.only(bottom: 8),
@@ -229,7 +241,13 @@ class MyHomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          if (title == "Check Attendance Report") {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => AttendanceDashboard()),
+            );
+          }
+        },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
