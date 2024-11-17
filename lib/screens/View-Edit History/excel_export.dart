@@ -19,6 +19,10 @@ class ExcelExportUtil {
       List<Map<String, dynamic>> data, DateTime selectedDate) {
     // Create new Excel workbook and worksheet
     final excel = Excel.createExcel();
+    
+    // Rename Sheet1 to Attendance
+    excel.rename('Sheet1', 'Attendance');
+    
     final sheet = excel['Attendance'];
 
     // Define and add column headers to the first row
