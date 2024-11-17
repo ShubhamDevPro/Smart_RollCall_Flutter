@@ -186,11 +186,13 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addCourse,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, size: 28),
-      ),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton(
+              onPressed: _addCourse,
+              backgroundColor: Colors.blue[700],
+              child: const Icon(Icons.add, size: 28),
+            )
+          : null,
     );
   }
 
