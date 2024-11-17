@@ -495,7 +495,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton(
           onPressed: () {
             showModalBottomSheet(
               context: context,
@@ -506,8 +506,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               builder: (context) => AddStudentModal(batchId: widget.batchId),
             );
           },
-          icon: const Icon(Icons.add),
-          label: const Text('Add Student'),
+          child: const Icon(Icons.add),
+          //label: const Text(''),
         ),
       ),
     );
