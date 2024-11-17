@@ -42,13 +42,6 @@ class MyApp extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
       ),
-      darkTheme: ThemeData(
-        // Optional dark theme
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-      ),
       home: AuthPage(),
     );
   }
