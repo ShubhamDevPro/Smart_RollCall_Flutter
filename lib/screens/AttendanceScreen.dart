@@ -34,6 +34,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   // Controller for the search text field
   final TextEditingController _searchController = TextEditingController();
 
+  // Add this to your state class
+  DateTime selectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -88,7 +91,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       // Save attendance data for current date
       await _firestoreService.saveAttendanceForDate(
         widget.batchId,
-        DateTime.now(),
+        selectedDate,
         attendanceData,
       );
 
@@ -130,8 +133,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   /// Returns current date in DD/MM/YYYY format
   String _getCurrentDate() {
-    final now = DateTime.now();
-    return '${now.day}/${now.month}/${now.year}';
+    return '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
   }
 
   /// Updates the present count when attendance is marked
@@ -161,6 +163,32 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       }
       presentCount = allSelected ? 0 : students.length;
     });
+  }
+
+  // Add this method to handle date selection
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+      // Add logic here to load attendance for selected date
+    }
   }
 
   @override
@@ -201,6 +229,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -224,41 +253,58 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Date display
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'Today\'s Attendance',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
+                      // Date selection container - now full width
+                      InkWell(
+                        onTap: () => _selectDate(context),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 16),
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.calendar_today,
+                                color: Colors.white,
+                                size: 20,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(width: 8),
+                              Text(
+                                selectedDate.day == DateTime.now().day &&
+                                        selectedDate.month ==
+                                            DateTime.now().month &&
+                                        selectedDate.year == DateTime.now().year
+                                    ? 'Today\'s Attendance'
+                                    : '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.white,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '(${_getCurrentDate()})',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 24),
-                      // Statistics cards
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // Total students card
-                            Padding(
+                      // Statistics cards - now in a Row with equal spacing
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                                  const EdgeInsets.symmetric(horizontal: 4),
                               child: _buildStatCard(
                                 'Total',
                                 '${students.length}',
@@ -266,10 +312,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 Theme.of(context).primaryColor.withBlue(255),
                               ),
                             ),
-                            // Present students card
-                            Padding(
+                          ),
+                          Expanded(
+                            child: Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                                  const EdgeInsets.symmetric(horizontal: 4),
                               child: _buildStatCard(
                                 'Present',
                                 '$presentCount',
@@ -277,19 +324,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 Colors.green,
                               ),
                             ),
-                            // Absent students card
-                            Padding(
+                          ),
+                          Expanded(
+                            child: Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                                  const EdgeInsets.symmetric(horizontal: 4),
                               child: _buildStatCard(
                                 'Absent',
-                                '$absentCount',
+                                '${students.length - presentCount}',
                                 Icons.cancel_rounded,
                                 Colors.red,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -468,43 +516,40 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   /// Builds a statistics card widget with specified title, value, icon, and color
   Widget _buildStatCard(
       String title, String value, IconData icon, Color color) {
-    return SizedBox(
-      width: 100,
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 28,
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 28,
+              color: color,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
                 color: color,
               ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
               ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
