@@ -116,55 +116,37 @@ class _AttendanceDashboardState extends State<AttendanceDashboard> {
               ),
             ),
 
-            // Weekly Pattern Heatmap (Simplified - no heatmap library used)
+            // Weekly Pattern Heatmap
             Card(
+              margin: const EdgeInsets.all(8.0),
+              elevation: 4,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const ListTile(
-                    title: Text('Weekly Attendance Pattern'),
+                    title: Text(
+                      'Weekly Attendance Pattern',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: GridView.count(
-                      crossAxisCount: 7,
+                      crossAxisCount: 5,
                       shrinkWrap: true,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        'Mon',
-                        'Tue',
-                        'Wed',
-                        'Thu',
-                        'Fri',
-                        'Sat',
-                        'Sun'
-                      ]
-                          .map((day) => Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[100],
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        day,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const Text(
-                                        '92%',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ))
-                          .toList(),
+                        _buildAttendanceCell('Mon', 90, Colors.green),
+                        _buildAttendanceCell('Tue', 80, Colors.lightGreen),
+                        _buildAttendanceCell('Wed', 75, Colors.orange),
+                        _buildAttendanceCell('Thu', 50, Colors.red),
+                        _buildAttendanceCell('Fri', 100, Colors.green),
+                      ],
                     ),
                   ),
                 ],
@@ -172,6 +154,37 @@ class _AttendanceDashboardState extends State<AttendanceDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAttendanceCell(String day, double percentage, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: color, width: 2),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            day,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${percentage.toInt()}%',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
