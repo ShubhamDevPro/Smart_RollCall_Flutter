@@ -31,7 +31,23 @@ class MyApp extends StatelessWidget {
       debugShowMaterialGrid: false,
       title: 'Student Attendance',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue, // Your primary color
+          brightness: Brightness.light, // For light theme
+        ),
+        // Other theme properties
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      darkTheme: ThemeData(
+        // Optional dark theme
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
       ),
       home: AuthPage(),
     );

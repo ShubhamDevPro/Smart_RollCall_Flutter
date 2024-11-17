@@ -3,6 +3,7 @@ import 'package:smart_roll_call_flutter/models/student.dart';
 import 'package:smart_roll_call_flutter/services/firestore_service.dart';
 import 'package:smart_roll_call_flutter/widgets/AddStudentModal.dart';
 import 'package:smart_roll_call_flutter/screens/View-Edit History/AttendanceHistory.dart';
+import 'package:flutter/services.dart';
 
 /// AttendanceScreen is a stateful widget that manages the attendance marking interface
 /// for a specific batch of students.
@@ -25,11 +26,11 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   // Service instance to handle Firestore operations
   final FirestoreService _firestoreService = FirestoreService();
-  
+
   // Lists to manage all students and filtered students for search
   List<Student> students = [];
   List<Student> filteredStudents = [];
-  
+
   // Controller for the search text field
   final TextEditingController _searchController = TextEditingController();
 
@@ -39,7 +40,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     // Set up stream listener for student data from Firestore
     _firestoreService.getStudents(widget.batchId).listen((snapshot) {
       setState(() {
-        students = snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
+        students =
+            snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
         filteredStudents = students;
       });
     });
@@ -54,7 +56,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         final enrollLower = student.enrollNumber.toLowerCase();
         final searchLower = query.toLowerCase();
         return nameLower.contains(searchLower) ||
-              enrollLower.contains(searchLower);
+            enrollLower.contains(searchLower);
       }).toList();
     });
   }
@@ -72,14 +74,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     // Ensure keyboard is dismissed before proceeding
     FocusManager.instance.primaryFocus?.unfocus();
     await Future.delayed(const Duration(milliseconds: 100));
-    
+
     try {
       // Prepare attendance data for storage
-      final attendanceData = students.map((student) => {
-        'name': student.name,
-        'enrollNumber': student.enrollNumber,
-        'isPresent': student.isPresent,
-      }).toList();
+      final attendanceData = students
+          .map((student) => {
+                'name': student.name,
+                'enrollNumber': student.enrollNumber,
+                'isPresent': student.isPresent,
+              })
+          .toList();
 
       // Save attendance data for current date
       await _firestoreService.saveAttendanceForDate(
@@ -162,39 +166,61 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     final absentCount = students.length - presentCount;
-    
+    final theme = Theme.of(context);
+
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Take Attendance', style: TextStyle(fontWeight: FontWeight.w600)),
+          title: const Text(
+            'Take Attendance',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
+              color: Colors.white,
+            ),
+          ),
           elevation: 0,
+          backgroundColor: theme.primaryColor,
           actions: [
             IconButton(
               onPressed: _clearSelection,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: Colors.white,
+              ),
               tooltip: 'Reset Attendance',
             ),
             const SizedBox(width: 8),
           ],
+          systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Header section with gradient background
                 Container(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.8)],
+                      colors: [
+                        theme.primaryColor,
+                        theme.primaryColor.withOpacity(0.85),
+                      ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
                     borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(32),
-                      bottomRight: Radius.circular(32),
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.primaryColor.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -231,7 +257,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           children: [
                             // Total students card
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: _buildStatCard(
                                 'Total',
                                 '${students.length}',
@@ -241,7 +268,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             ),
                             // Present students card
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: _buildStatCard(
                                 'Present',
                                 '$presentCount',
@@ -251,7 +279,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             ),
                             // Absent students card
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: _buildStatCard(
                                 'Absent',
                                 '$absentCount',
@@ -265,17 +294,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ],
                   ),
                 ),
-                // Search field
+                // Updated search field styling
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search by name or enrollment number',
-                      prefixIcon: const Icon(Icons.search),
+                      prefixIcon: Icon(Icons.search, color: theme.primaryColor),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear),
+                              icon:
+                                  Icon(Icons.clear, color: theme.primaryColor),
                               onPressed: () {
                                 _searchController.clear();
                                 _filterStudents('');
@@ -283,16 +313,27 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                             )
                           : null,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                            color: theme.primaryColor.withOpacity(0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(
+                            color: theme.primaryColor.withOpacity(0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide:
+                            BorderSide(color: theme.primaryColor, width: 2),
                       ),
                       filled: true,
-                      fillColor: Colors.grey.shade50,
+                      fillColor: theme.cardColor,
                     ),
                     onChanged: _filterStudents,
                   ),
                 ),
-                // Students list header with controls
+                // Updated students list header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                   child: Row(
@@ -301,34 +342,45 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       Expanded(
                         child: Text(
                           'Students List',
-                          style: TextStyle(
-                            fontSize: 18,
+                          style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Select/Deselect all button
                       TextButton.icon(
                         onPressed: students.isEmpty ? null : _toggleSelectAll,
                         icon: Icon(
-                          presentCount == students.length ? Icons.deselect : Icons.select_all,
+                          presentCount == students.length
+                              ? Icons.deselect
+                              : Icons.select_all,
                           size: 20,
                         ),
                         label: Text(
-                          presentCount == students.length ? 'Deselect All' : 'Select All',
-                          style: const TextStyle(fontSize: 14),
+                          presentCount == students.length
+                              ? 'Deselect All'
+                              : 'Select All',
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.primaryColor,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Attendance count chip
-                      Chip(
-                        label: Text(
-                          '$presentCount/${students.length}',
-                          style: const TextStyle(color: Colors.white),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
                         ),
-                        backgroundColor: Theme.of(context).primaryColor,
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '$presentCount/${students.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -361,33 +413,32 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ],
                   ),
                 ),
-                // Save button
+                // Updated save button
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: ElevatedButton(
-                        onPressed: presentCount > 0 ? _saveAttendance : null,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(150, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                    child: ElevatedButton(
+                      onPressed: presentCount > 0 ? _saveAttendance : null,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(200, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.save_rounded),
-                            const SizedBox(width: 8),
-                            const Flexible(
-                              child: Text(
-                                'Save Attendance',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        elevation: 2,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.save_rounded),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Save Attendance',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -396,7 +447,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             showModalBottomSheet(
               context: context,
@@ -407,14 +458,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               builder: (context) => AddStudentModal(batchId: widget.batchId),
             );
           },
-          child: const Icon(Icons.add),
+          icon: const Icon(Icons.add),
+          label: const Text('Add Student'),
         ),
       ),
     );
   }
 
   /// Builds a statistics card widget with specified title, value, icon, and color
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return SizedBox(
       width: 100,
       child: Card(
@@ -464,7 +517,8 @@ class StudentCard extends StatefulWidget {
   final Student student;
   final ValueChanged<bool> onChanged;
 
-  const StudentCard({super.key, required this.student, required this.onChanged});
+  const StudentCard(
+      {super.key, required this.student, required this.onChanged});
 
   @override
   _StudentCardState createState() => _StudentCardState();
@@ -473,6 +527,8 @@ class StudentCard extends StatefulWidget {
 class _StudentCardState extends State<StudentCard> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -481,36 +537,40 @@ class _StudentCardState extends State<StudentCard> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        // Avatar showing first letter of student's name with dynamic color based on attendance
         leading: CircleAvatar(
-          backgroundColor: widget.student.isPresent 
-              ? Colors.green.withOpacity(0.1)
+          backgroundColor: widget.student.isPresent
+              ? Theme.of(context).primaryColor.withOpacity(0.1)
               : Colors.grey.withOpacity(0.1),
           child: Text(
-            widget.student.name[0],  // Display first letter of student's name
+            widget.student.name[0],
             style: TextStyle(
-              color: widget.student.isPresent ? Colors.green : Colors.grey[700],
+              color: widget.student.isPresent
+                  ? Theme.of(context).primaryColor
+                  : Colors.grey[700],
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        // Student name display
         title: Text(
           widget.student.name,
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
         ),
-        // Enrollment number display
-        subtitle: Text('Enrollment No: ${widget.student.enrollNumber}'),
-        // Attendance checkbox with custom styling
+        subtitle: Text(
+          'Enrollment No: ${widget.student.enrollNumber}',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+        ),
         trailing: Transform.scale(
-          scale: 1.2,  // Make checkbox slightly larger
+          scale: 1.2,
           child: Checkbox(
             value: widget.student.isPresent,
-            activeColor: Colors.green,
+            activeColor: Theme.of(context).primaryColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
-            // Update attendance status and trigger callback when checkbox is toggled
             onChanged: (bool? value) {
               setState(() {
                 widget.student.isPresent = value ?? false;

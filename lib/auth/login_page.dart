@@ -27,8 +27,8 @@ class _LoginPageState extends State<LoginPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.teal.shade200,
-              Colors.teal.shade50,
+              Colors.blue.shade200,
+              Colors.blue.shade50,
             ],
           ),
         ),
@@ -57,14 +57,14 @@ class _LoginPageState extends State<LoginPage> {
                       child: Icon(
                         Icons.school_rounded,
                         size: 80,
-                        color: Colors.teal,
+                        color: Colors.blue.shade700,
                       ),
                     ),
                     SizedBox(height: 24),
                     Text(
                       "Smart Roll Call",
                       style: TextStyle(
-                        color: Colors.teal.shade800,
+                        color: Colors.blue.shade800,
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                                 padding: EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isProfessorLogin
-                                      ? Colors.teal
+                                      ? Colors.blue.shade700
                                       : Colors.white,
                                   borderRadius: BorderRadius.horizontal(
                                       left: Radius.circular(12)),
@@ -115,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(
                                     color: isProfessorLogin
                                         ? Colors.white
-                                        : Colors.teal,
+                                        : Colors.blue.shade700,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -130,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                                 padding: EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: !isProfessorLogin
-                                      ? Colors.teal
+                                      ? Colors.blue.shade700
                                       : Colors.white,
                                   borderRadius: BorderRadius.horizontal(
                                       right: Radius.circular(12)),
@@ -141,7 +141,7 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(
                                     color: !isProfessorLogin
                                         ? Colors.white
-                                        : Colors.teal,
+                                        : Colors.blue.shade700,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -177,19 +177,19 @@ class _LoginPageState extends State<LoginPage> {
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 prefixIcon: Icon(Icons.email_outlined,
-                                    color: Colors.teal),
+                                    color: Colors.blue.shade700),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide:
-                                      BorderSide(color: Colors.teal.shade200),
+                                      BorderSide(color: Colors.blue.shade200),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide:
-                                      BorderSide(color: Colors.teal, width: 2),
+                                  borderSide: BorderSide(
+                                      color: Colors.blue.shade700, width: 2),
                                 ),
                               ),
                               validator: (value) {
@@ -211,19 +211,19 @@ class _LoginPageState extends State<LoginPage> {
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 prefixIcon: Icon(Icons.lock_outline,
-                                    color: Colors.teal),
+                                    color: Colors.blue.shade700),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide:
-                                      BorderSide(color: Colors.teal.shade200),
+                                      BorderSide(color: Colors.blue.shade200),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide:
-                                      BorderSide(color: Colors.teal, width: 2),
+                                  borderSide: BorderSide(
+                                      color: Colors.blue.shade700, width: 2),
                                 ),
                               ),
                               validator: (value) {
@@ -244,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                                 child: Text(
                                   'Forgot Password?',
-                                  style: TextStyle(color: Colors.teal.shade700),
+                                  style: TextStyle(color: Colors.blue.shade700),
                                 ),
                               ),
                             ),
@@ -273,17 +273,35 @@ class _LoginPageState extends State<LoginPage> {
                                         );
                                       }
                                     } else {
-                                      // For student login, navigate to Student HomeScreen
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => MyHomePage()),
-                                      );
+                                      // Hardcoded student credentials check
+                                      if ((_emailController.text ==
+                                                  'shubham.01919051722@ipu.ac.in' &&
+                                              _passwordController.text ==
+                                                  '123') ||
+                                          (_emailController.text ==
+                                              'test@test.com')) {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  MyHomePage()),
+                                        );
+                                      } else {
+                                        // Show error message for invalid credentials
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'Invalid student credentials'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
                                     }
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.teal,
+                                  backgroundColor: Colors.blue.shade700,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),

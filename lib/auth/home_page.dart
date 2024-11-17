@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '/services/auth_service.dart';
 import 'auth_page.dart';
 
-
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
@@ -23,13 +22,13 @@ class HomePage extends StatelessWidget {
             SizedBox(height: 20),
             // Display user's name
             Text(
-              user?.displayName ?? "Welcome!",
+              user?.displayName ?? "GoodBye  🙋‍♂️",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             // Display user's email
             Text(
-              "You've successfully logged in with:",
+              "You've successfully logged out:",
               style: TextStyle(color: Colors.grey[600]),
             ),
             Text(
@@ -53,7 +52,7 @@ class HomePage extends StatelessWidget {
                 backgroundColor: Colors.red,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               ),
-              child: Text("Logout"),
+              child: Text("OK"),
             ),
           ],
         ),
