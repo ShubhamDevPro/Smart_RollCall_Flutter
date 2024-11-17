@@ -24,7 +24,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isLoading = false;
   // Add selected index for bottom nav
   int _selectedIndex = 0;
-  
+
   // Add page controller
   late PageController _pageController;
 
@@ -149,7 +149,6 @@ class _MyHomePageState extends State<MyHomePage> {
           const SizedBox(width: 8),
         ],
       ),
-      
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
@@ -158,15 +157,14 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           // Home page (existing content)
           _buildHomePage(),
-          
+
           // Attendance Overview page
-          const AttendanceOverviewScreen(),
-          
+          AttendanceOverviewScreen(),
+
           // Settings page
           const SettingsScreen(),
         ],
       ),
-
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onItemTapped,
@@ -188,7 +186,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: _addCourse,
         backgroundColor: Colors.blue[700],
@@ -404,7 +401,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                          Icon(Icons.delete_outline,
+                              size: 20, color: Colors.red),
                           SizedBox(width: 8),
                           Text('Delete', style: TextStyle(color: Colors.red)),
                         ],
@@ -451,8 +449,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           title: const Text('Delete Course'),
           content: const Text(
-            'This course will be permanently deleted. This action cannot be undone.'
-          ),
+              'This course will be permanently deleted. This action cannot be undone.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -460,9 +457,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete', 
-                style: TextStyle(color: Colors.red)
-              ),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -474,7 +469,7 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() => _isLoading = true);
         // Delete the course from Firestore
         await _firestoreService.deleteBatch(courses[index]['batchId']);
-        
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Course deleted successfully')),

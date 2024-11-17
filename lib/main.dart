@@ -5,12 +5,12 @@ import 'firebase_options.dart'; // Import the generated file
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   const int defaultBufferSize = 1000;
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
   };
-  
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -19,7 +19,7 @@ void main() async {
     debugPrint('Firebase initialization error: $e');
     // Handle initialization error gracefully
   }
-  
+
   runApp(const MyApp());
 }
 
@@ -38,5 +38,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
