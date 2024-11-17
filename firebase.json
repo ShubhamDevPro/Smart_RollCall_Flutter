@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"smart-roll-call-37be0","appId":"1:287942966857:android:213dfed41beaf99c2fc998","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"smart-roll-call-37be0","configurations":{"android":"1:287942966857:android:213dfed41beaf99c2fc998","ios":"1:287942966857:ios:062349519bbbc5652fc998","macos":"1:287942966857:ios:062349519bbbc5652fc998","web":"1:287942966857:web:00332d1e4f5fb1b22fc998","windows":"1:287942966857:web:84b96a6fd6d20a472fc998"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "smart-roll-call-37be0",
+          "appId": "1:287942966857:android:213dfed41beaf99c2fc998",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "smart-roll-call-37be0",
+          "configurations": {
+            "android": "1:287942966857:android:213dfed41beaf99c2fc998",
+            "ios": "1:287942966857:ios:062349519bbbc5652fc998",
+            "macos": "1:287942966857:ios:062349519bbbc5652fc998",
+            "web": "1:287942966857:web:00332d1e4f5fb1b22fc998",
+            "windows": "1:287942966857:web:84b96a6fd6d20a472fc998"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
