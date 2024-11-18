@@ -267,6 +267,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min, // Take minimum space needed
                             children: [
                               const Icon(
                                 Icons.calendar_today,
@@ -274,17 +275,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                selectedDate.day == DateTime.now().day &&
-                                        selectedDate.month ==
-                                            DateTime.now().month &&
-                                        selectedDate.year == DateTime.now().year
-                                    ? 'Today\'s Attendance'
-                                    : '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                              Flexible( // Make text flexible
+                                child: Text(
+                                  selectedDate.day == DateTime.now().day &&
+                                          selectedDate.month ==
+                                              DateTime.now().month &&
+                                          selectedDate.year == DateTime.now().year
+                                      ? 'Today\'s Attendance'
+                                      : '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis, // Handle text overflow
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -592,11 +596,15 @@ class _StudentCardState extends State<StudentCard> {
             ),
           ),
         ),
-        title: Text(
-          widget.student.name,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                widget.student.name,
+                overflow: TextOverflow.ellipsis, // Handles text overflow
               ),
+            ),
+          ],
         ),
         subtitle: Text(
           'Enrollment No: ${widget.student.enrollNumber}',
