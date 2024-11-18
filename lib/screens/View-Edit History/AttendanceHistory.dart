@@ -148,30 +148,30 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   /// Exports attendance data to Excel file
   Future<void> _exportAttendanceData() async {
     setState(() => isLoading = true);
-
-    await ExcelExportUtil.exportAttendanceData(
-      data: attendanceData,
-      selectedDate: selectedDate,
-      onError: (error) {
-        // Show error message if export fails
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error exporting data: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      },
-      onSuccess: () {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Attendance data exported successfully'),
-          ),
-        );
-      },
-    );
-
-    setState(() => isLoading = false);
+    try {
+      final data = await _firestoreService.getAttendanceHistory(widget.batchId!);
+      await ExcelExportUtil.exportAttendanceData(
+        data: data,
+        selectedDate: selectedDate,
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error exporting data: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Attendance data exported successfully'),
+            ),
+          );
+        },
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
