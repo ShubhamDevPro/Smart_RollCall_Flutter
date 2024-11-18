@@ -166,22 +166,30 @@ class _AttendanceDashboardState extends State<AttendanceDashboard> {
         border: Border.all(color: color, width: 2),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min, // Makes column take minimum required space
         children: [
-          Text(
-            day,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${percentage.toInt()}%',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: color,
+          Flexible(
+            child: SingleChildScrollView( // Makes content scrollable if needed
+              child: Column(
+                children: [
+                  Text(
+                    day,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${percentage.toInt()}%',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
