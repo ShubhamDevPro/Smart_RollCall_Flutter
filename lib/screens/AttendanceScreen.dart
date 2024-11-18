@@ -461,53 +461,38 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ],
                   ),
                 ),
-                // Updated save button
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: presentCount > 0 ? _saveAttendance : null,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(200, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.save_rounded),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Save Attendance',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (presentCount > 0)
+              FloatingActionButton.extended(
+                onPressed: _saveAttendance,
+                label: const Text('Save Attendance'),
+                icon: const Icon(Icons.save_rounded),
+                heroTag: 'save',
               ),
-              builder: (context) => AddStudentModal(batchId: widget.batchId),
-            );
-          },
-          child: const Icon(Icons.add),
-          //label: const Text(''),
+            const SizedBox(height: 16),
+            FloatingActionButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (context) =>
+                      AddStudentModal(batchId: widget.batchId),
+                );
+              },
+              heroTag: 'add',
+              child: const Icon(Icons.add),
+            ),
+          ],
         ),
       ),
     );
