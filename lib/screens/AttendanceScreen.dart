@@ -438,7 +438,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   height: MediaQuery.of(context).size.height - 400,
                   child: Column(
                     children: [
-                      // Make the ListView take remaining space
                       Expanded(
                         child: filteredStudents.isEmpty
                             ? Center(
@@ -448,7 +447,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 ),
                               )
                             : ListView.builder(
-                                padding: const EdgeInsets.all(16),
+                                // Add padding at the bottom to account for FABs
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  right: 16,
+                                  top: 16,
+                                  bottom: 80, // Increased bottom padding
+                                ),
                                 itemCount: filteredStudents.length,
                                 itemBuilder: (context, index) {
                                   return StudentCard(
@@ -465,17 +470,22 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
           ),
         ),
-        floatingActionButton: Column(
+        floatingActionButton: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (presentCount > 0)
-              FloatingActionButton.extended(
-                onPressed: _saveAttendance,
-                label: const Text('Save Attendance'),
-                icon: const Icon(Icons.save_rounded),
-                heroTag: 'save',
+            if (presentCount > 0) ...[
+              const SizedBox(width: 32), // Padding from left edge
+              Padding(
+                padding: const EdgeInsets.only(left: 32),
+                child: FloatingActionButton.extended(
+                  onPressed: _saveAttendance,
+                  label: const Text('Save Attendance'),
+                  icon: const Icon(Icons.save_rounded),
+                  heroTag: 'save',
+                ),
               ),
-            const SizedBox(height: 16),
+            ],
+            const Spacer(), // This will push the add button to the end
             FloatingActionButton(
               onPressed: () {
                 showModalBottomSheet(
@@ -494,6 +504,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ),
           ],
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
