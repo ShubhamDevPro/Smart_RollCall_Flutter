@@ -373,4 +373,47 @@ class FirestoreService {
       throw Exception('Failed to fetch attendance data: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getAttendanceHistory(String batchId) async {
+    try {
+      Map<String, Map<String, dynamic>> studentData = {};
+      
+      // Get all students in the batch
+      final studentsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('batches')
+          .doc(batchId)
+          .collection('students')
+          .get();
+
+      // Process each student
+      for (var student in studentsSnapshot.docs) {
+        final enrollNumber = student.data()['enrollNumber'] as String;
+        final name = student.data()['name'] as String;
+        
+        // Get all attendance records for this student
+        final attendanceSnapshot = await student.reference
+            .collection('attendance')
+            .get();
+        
+        // Create attendance map
+        Map<String, bool> attendance = {};
+        for (var record in attendanceSnapshot.docs) {
+          attendance[record.id] = record.data()['isPresent'] as bool;
+        }
+        
+        studentData[enrollNumber] = {
+          'name': name,
+          'enrollNumber': enrollNumber,
+          'attendance': attendance,
+        };
+      }
+      
+      return studentData.values.toList();
+    } catch (e) {
+      print('Error getting attendance history: $e');
+      rethrow;
+    }
+  }
 }

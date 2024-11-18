@@ -17,47 +17,79 @@ class ExcelExportUtil {
   /// @returns Excel workbook object
   static Excel generateExcelFile(
       List<Map<String, dynamic>> data, DateTime selectedDate) {
-    // Create new Excel workbook and worksheet
     final excel = Excel.createExcel();
-    
-    // Rename Sheet1 to Attendance
     excel.rename('Sheet1', 'Attendance');
-    
     final sheet = excel['Attendance'];
 
-    // Define and add column headers to the first row
-    sheet.appendRow([
-      TextCellValue('Date'),
+    // Get unique dates from attendance data
+    final Set<String> attendanceDates = {};
+    for (var record in data) {
+      if (record['attendance'] != null) {
+        attendanceDates
+            .addAll((record['attendance'] as Map).keys.cast<String>());
+      }
+    }
+    final List<String> sortedDates = attendanceDates.toList()..sort();
+
+    // Create headers
+    List<TextCellValue> headers = [
       TextCellValue('Name'),
       TextCellValue('Enrollment Number'),
-      TextCellValue('Status'),
+    ];
+
+    // Add date columns with reformatted dates (YYYY-MM-DD to DD-MM-YYYY)
+    headers.addAll(sortedDates.map((date) {
+      final parts = date.split('-');
+      if (parts.length == 3) {
+        return TextCellValue('${parts[2]}-${parts[1]}-${parts[0]}');
+      }
+      return TextCellValue(date);
+    }));
+
+    // Add summary columns
+    headers.addAll([
       TextCellValue('Total Days'),
       TextCellValue('Present Days'),
       TextCellValue('Attendance %')
     ]);
+    sheet.appendRow(headers);
 
-    // Iterate through attendance records and add data rows
+    // Add data rows
     for (var record in data) {
-      // Calculate attendance percentage
-      final totalDays = record['totalDays'] ?? 0;
-      final presentDays = record['presentDays'] ?? 0;
-      final attendancePercentage = totalDays > 0
-          ? (presentDays / totalDays * 100).toStringAsFixed(1)
-          : '0.0';
-
-      // Add row with formatted data
-      sheet.appendRow([
-        TextCellValue(selectedDate.toString().split(' ')[0]), // Date in YYYY-MM-DD format
+      List<CellValue> row = [
         TextCellValue(record['name'] ?? ''),
         TextCellValue(record['enrollNumber'] ?? ''),
-        TextCellValue(record['isPresent'] == true ? 'Present' : 'Absent'),
+      ];
+
+      // Add attendance status for each date
+      int presentCount = 0;
+      for (var date in sortedDates) {
+        var status = 'NA';
+        if (record['attendance']?[date] != null) {
+          status = record['attendance'][date] ? 'Present' : 'Absent';
+          if (record['attendance'][date]) presentCount++;
+        }
+        row.add(TextCellValue(status));
+      }
+
+      // Calculate and add summary data
+      final totalDays = sortedDates
+          .where((date) => record['attendance']?[date] != null)
+          .length;
+      final attendancePercentage = totalDays > 0
+          ? (presentCount / totalDays * 100).toStringAsFixed(1)
+          : '0.0';
+
+      row.addAll([
         TextCellValue(totalDays.toString()),
-        TextCellValue(presentDays.toString()),
+        TextCellValue(presentCount.toString()),
         TextCellValue('$attendancePercentage%')
       ]);
+
+      sheet.appendRow(row);
     }
 
-    // Set uniform column widths for better readability
+    // Auto-fit columns
     for (var i = 0; i < sheet.maxColumns; i++) {
       sheet.setColAutoFit(i);
     }
@@ -99,14 +131,14 @@ class ExcelExportUtil {
         // Web platform: Create download link
         final blob = html.Blob([excelBytes]);
         final url = html.Url.createObjectUrlFromBlob(blob);
-        
+
         // Create and trigger download
         final anchor = html.AnchorElement(href: url)
           ..setAttribute("download", fileName)
           ..style.display = 'none';
         html.document.body?.children.add(anchor);
         anchor.click();
-        
+
         // Clean up
         html.document.body?.children.remove(anchor);
         html.Url.revokeObjectUrl(url);
