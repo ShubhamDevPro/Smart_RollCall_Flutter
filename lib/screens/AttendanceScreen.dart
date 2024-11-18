@@ -452,7 +452,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                   left: 16,
                                   right: 16,
                                   top: 16,
-                                  bottom: 80, // Increased bottom padding
+                                  bottom: 160, // Increased bottom padding
                                 ),
                                 itemCount: filteredStudents.length,
                                 itemBuilder: (context, index) {
