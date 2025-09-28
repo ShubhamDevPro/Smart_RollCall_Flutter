@@ -17,6 +17,8 @@ A comprehensive attendance management system that combines Flutter mobile applic
 ### ESP32 Automatic Attendance (Planned Integration)
 - **MAC Address Detection**: Automatically detect student devices when they connect to ESP32 WiFi
 - **Automatic Attendance Marking**: Mark attendance automatically based on device MAC addresses
+- **Facial Recognition Verification**: Students must capture live photo for verification when MAC-based attendance is detected
+- **Anti-Proxy System**: Prevents proxy attendance by requiring physical presence verification through facial recognition
 - **Firebase Integration**: Direct integration with Firebase database (replacing IFTTT and Google Sheets)
 - **Device Registration**: Students register their device MAC addresses in the app
 - **Dual Tracking**: Support both manual and automatic attendance methods
@@ -91,6 +93,8 @@ lib/
 - **State Management**: Provider/setState
 - **Charts**: Syncfusion Flutter Charts
 - **Export**: Excel package
+- **Camera**: Camera plugin for live photo capture
+- **Facial Recognition**: ML Kit Face Detection or custom ML model
 - **Platform**: Cross-platform (Android, iOS, Web)
 
 ### ESP32 Module
@@ -174,6 +178,7 @@ lib/
   "name": "Student Name",
   "enrollNumber": "enrollment_id",
   "macAddress": "AA:BB:CC:DD:EE:FF",  // For ESP32 integration
+  "profileImageUrl": "firebase_storage_url",  // For facial recognition
   "isPresent": false,
   "createdAt": "timestamp"
 }
@@ -203,7 +208,9 @@ lib/
       "isPresent": true,
       "markedAt": "timestamp",
       "method": "manual|automatic",  // New field for tracking method
-      "deviceMac": "AA:BB:CC:DD:EE:FF"  // For automatic attendance
+      "deviceMac": "AA:BB:CC:DD:EE:FF",  // For automatic attendance
+      "verificationImageUrl": "firebase_storage_url",  // Live captured image for verification
+      "facialVerificationStatus": "verified|failed|pending"  // Facial recognition result
     }
   ]
 }
@@ -221,12 +228,16 @@ lib/
 - Add MAC address field to student records
 - Implement device registration in Flutter app
 
-### Phase 3: Unified System 📋
+### Phase 3: Unified System with Facial Recognition 📋
 - Real-time sync between manual and automatic attendance
+- Facial recognition integration for anti-proxy verification
+- Live photo capture when MAC-based attendance is detected
+- Profile image storage and comparison system
 - Conflict resolution (if both methods mark attendance)
 - Enhanced reporting with attendance method tracking
 
 ### Phase 4: Advanced Features 🚀
+- Facial recognition for anti-proxy attendance verification
 - Multiple ESP32 modules for different locations
 - Geofencing for attendance validation
 - Advanced analytics and reporting
@@ -242,12 +253,15 @@ lib/
 5. Save attendance record
 6. View reports and export data
 
-### Automatic Attendance (After Integration)
-1. Register student devices (MAC addresses) in the app
+### Automatic Attendance with Facial Verification (After Integration)
+1. Register student devices (MAC addresses) and profile photos in the app
 2. Deploy ESP32 in classroom/location
 3. Students connect to ESP32 WiFi hotspot
-4. Attendance automatically marked when device detected
-5. Real-time updates reflected in Flutter app
+4. System detects MAC address and prompts student for live photo capture
+5. Student captures live photo through mobile app
+6. Facial recognition compares live photo with stored profile image
+7. Attendance marked only if facial verification succeeds
+8. Real-time updates reflected in Flutter app with verification status
 
 ## 🤝 Contributing
 
@@ -283,8 +297,10 @@ For support and questions:
 ## 🚀 Future Enhancements
 
 - Machine learning for attendance pattern analysis
-- Face recognition integration
+- Advanced facial recognition with liveness detection
+- Behavioral biometrics for enhanced security
 - Mobile app for teachers and students
 - Integration with LMS systems
-- Advanced security features
+- Voice recognition as additional verification layer
 - Multi-language support
+- Anti-spoofing measures for photo verification
